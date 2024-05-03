@@ -17,7 +17,13 @@ def run_tools(target):
 
 	os.system("theHarvester -d {} -b all".format(target))
 	os.system("nmap -Pn -sV -T4 {}".format(target))
-
+	os.system("feroxbuster -u {}".format(target))
+	os.system("subfinder -d {} | dnsx -a -resp".format(target))
+	os.system("dmitry -i -w -n -s -e {}".format(target))
+	os.system("nslookup {}".format(target))
+	os.system("wafw00f -v -a {}".format(target))
+	os.system("nuclei -u{}".format(target))
+	os.system("wpscan --url {}".format(target))
 
 def main():
 
