@@ -23,8 +23,8 @@ def run_tool(command):
 
 # función principal que llama a las herramientas de OSINT y recon
 def main(flags):
-    if flags.ip or flags.d:
-        targets = [flags.ip or flags.d]
+    if flags.domain:
+        targets = [flags.domain]
     elif flags.list_Ip or flags.list_Domain:
         try:
             with open(flags.list_Ip or flags.list_Domain, 'r') as file:
@@ -40,8 +40,13 @@ def main(flags):
         for target in targets:
 
                 tools = []
+                print("tools")
+                print("nmap")
+                os.system("nmap -Pn -sV -T4 {}".format(target))
+                print("dmitry")
+                os.system("dmitry -i -w -n -s -e {}".format(target))
 
-                if flags.recon or not flags.vuln_scan:
+                '''if flags.recon or not flags.vuln_scan:
                     tools.extend([
                         f"theHarvester -d {target} -b all",
                         f"nmap {'-T5' if flags.aggressive else '-T2'} -Pn -sV {target}",
@@ -61,7 +66,7 @@ def main(flags):
                 results = list(executor.map(run_tool, tools))
                 for result in results:
                     print(result)
-
+'''
                 print(f"[+] OSINT and Recon for {target} completed.")
 
 
@@ -79,4 +84,5 @@ if __name__ == "__main__":
     parser.add_argument("--threads", type=int, default=4, help="Number of concurrent threads (default: 4)")
 
     args = parser.parse_args()
+    print(args)
     main(args)

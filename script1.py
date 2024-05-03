@@ -1,6 +1,6 @@
 import os
 import subprocess
-import argparse
+#import argparse
 
 
 
@@ -25,7 +25,7 @@ def run_tools(target):
 	os.system("wafw00f -v -a {}".format(target))
 	os.system("nuclei -u{}".format(target))
 	os.system("wpscan --url {}".format(target))
-	os.system("prips {} | go run hakip2host.go").format(target))
+	#os.system("prips {} | go run hakip2host.go").format(target))
 
 def main():
 
@@ -47,9 +47,9 @@ def main():
 
 if __name__ == '__main__':
 
-	parser = argparse.ArgumentParser(description='Recon & Scan automated script tool')
+	#parser = argparse.ArgumentParser(description='Recon & Scan automated script tool')
 
-	parser.add_argument('-t', '--target', help='Target domain name', required=True)
-	args = parser.parse_args()
+	#parser.add_argument('-t', '--target', help='Target domain name', required=True)
+	#args = parser.parse_args()
 
-	main(args.domain)
+	main()
