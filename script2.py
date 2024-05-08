@@ -19,7 +19,7 @@ def is_real_target(target):  #questionable
         return False
 
 
-# función para correr las herramientas de manera concurrente
+# función para correr las herramientas de manera concurrente funca?
 def run_tool(command):
     output = subprocess.run(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -82,7 +82,7 @@ def main(flags):
                 results = list(executor.map(run_tool, tools))
                 for result in results:
                     print(result)
-'''
+           '''
         print(f"[+] OSINT and Recon for {target} completed.")
 
 
