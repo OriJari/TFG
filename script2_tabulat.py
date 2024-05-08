@@ -6,7 +6,8 @@ import re
 import openpyxl
 import datetime
 import ipaddress
-from config import CommandEnum
+import validators
+from config import CommandEnumDef
 from concurrent.futures import ThreadPoolExecutor
 
 # logging.basicConfig(level=logging.INFO, filename="logs.log", filemode="w", format='%(asctime)s - %(levelname)s - %(message)s')
@@ -42,6 +43,13 @@ def validate_ip(ip):
     except ValueError:
         return False
 
+def validate_domain(domain):
+    try:
+        validators.domain(domain)
+        return True
+    except ValueError:
+        return False
+
 def filter_domains(text):
     domain_pattern = r'\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}\b'
     return re.findall(domain_pattern, text)
@@ -49,30 +57,41 @@ def filter_domains(text):
 def work_domini(targets,flags):
     with ThreadPoolExecutor(max_workers=flags.threads) as executor:
         for target in targets:
-            tools = []
+            if validate_domain(target):
+                tools = []
 
-            result_nmap = os.popen(CommandEnum.NMAP.format(target)).read()
-            result_dmitry = os.popen(CommandEnum.DMIRTY.format(target)).read()
-            logger.info(result_nmap)
-            logger.info(result_dmitry)
+                result_nmap = os.popen(CommandEnumDef.NMAP.format(target)).read()
+                result_dmitry = os.popen(CommandEnumDef.DMIRTY.format(target)).read()
+                logger.info(result_nmap)
+                logger.info(result_dmitry)
 
-        print(f"[+] OSINT and Recon for {targets} completed.")
+
+            else:
+                logger.error(f"[-] Domain {target} not valid")
+
+        print(f"[+] OSINT and Recon for {target} completed.")
+
+
 
 def work_ips(targets,flags):
     with ThreadPoolExecutor(max_workers=flags.threads) as executor:
         for target in targets:
-            tools = []
+            if validate_ip(target):
+                tools = []
 
-            result_nmap = os.popen("nmap -Pn -sV -T4 {}".format(target)).read()
-            result_dmitry = os.popen("dmitry -i -w -n -s -e {}".format(target)).read()
-            logger.info(result_nmap)
-            logger.info(result_dmitry)
+                result_nmap = os.popen("nmap -Pn -sV -T4 {}".format(target)).read()
+                result_dmitry = os.popen("dmitry -i -w -n -s -e {}".format(target)).read()
+                logger.info(result_nmap)
+                logger.info(result_dmitry)
+
+            else:
+                logger.error(f"[-] IP {target} not valid")
 
         print(f"[+] OSINT and Recon for {targets} completed.")
 
 
 def main(flags):
-    #todo validador de flags (ip i domini (unique))
+
     if flags.domain:
         targets = [flags.domain]
         work_domini(targets,flags)

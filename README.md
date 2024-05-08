@@ -5,7 +5,8 @@ U need to have python 3.12 installed
 
 ```pip install -r requirements.txt```
 ## Usage
-```usage: script2_tabulat.py [-h] [-i IP] [-d DOMAIN] [-lI LIST_IP] [-lD LIST_DOMAIN] [-r] [-v] [-a] [-c] [--threads THREADS]
+```
+usage: script2_tabulat.py [-h] [-i IP] [-d DOMAIN] [-lI LIST_IP] [-lD LIST_DOMAIN] [-r] [-v] [-a] [-c] [--threads THREADS]
 
 Recon & Scan automated script tool
 
