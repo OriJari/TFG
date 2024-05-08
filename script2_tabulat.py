@@ -5,12 +5,18 @@ import logging
 import re
 import openpyxl
 import datetime
+import ipaddress
+from config import CommandEnum
 from concurrent.futures import ThreadPoolExecutor
 
+# logging.basicConfig(level=logging.INFO, filename="logs.log", filemode="w", format='%(asctime)s - %(levelname)s - %(message)s')
+# #auditoria per servidor (sistema de logs)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+#globals
+logger = logging.getLogger()
 
-def is_real_target(target):
+def is_real_target(target): #questionable
     try:
         subprocess.check_output(["ping", "-c", "1", target], stderr=subprocess.DEVNULL)
         return True
@@ -18,7 +24,7 @@ def is_real_target(target):
         return False
 
 
-def run_tool(command):
+def run_tool(command): # función para correr las herramientas de manera concurrente funca?
     output = subprocess.run(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
@@ -27,7 +33,14 @@ def run_tool(command):
 
 def filter_ips(text):
     ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
+    return re.findall(ip_pattern, text)
 
+def validate_ip(ip):
+    try:
+        ipaddress.ip_address(ip)
+        return True
+    except ValueError:
+        return False
 
 def filter_domains(text):
     domain_pattern = r'\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}\b'
@@ -38,27 +51,12 @@ def work_domini(targets,flags):
         for target in targets:
             tools = []
 
-            result_nmap = os.popen("nmap -Pn -sV -T4 {}".format(target)).read()
-            result_dmitry = os.popen("dmitry -i -w -n -s -e {}".format(target)).read()
+            result_nmap = os.popen(CommandEnum.NMAP.format(target)).read()
+            result_dmitry = os.popen(CommandEnum.DMIRTY.format(target)).read()
             logger.info(result_nmap)
             logger.info(result_dmitry)
 
-    print(f"[+] OSINT and Recon for {target} completed.")
-
-    results_workbook = openpyxl.Workbook()
-
-    ws_single_model = results_workbook.create_sheet(title="Dummy result")
-    ws_single_model.append(['DNS',
-                            'IPS',
-                            'mails',
-                            'domains',
-                            'subdomains'
-                            ])
-
-    set_columns_width(ws_single_model)
-
-    output_file = f"{datetime.datetime.now()}_OSINT_tool_info_{flags.domain}.xlsx"
-    results_workbook.save(output_file)
+        print(f"[+] OSINT and Recon for {targets} completed.")
 
 def work_ips(targets,flags):
     with ThreadPoolExecutor(max_workers=flags.threads) as executor:
@@ -70,11 +68,11 @@ def work_ips(targets,flags):
             logger.info(result_nmap)
             logger.info(result_dmitry)
 
-    print(f"[+] OSINT and Recon for {target} completed.")
+        print(f"[+] OSINT and Recon for {targets} completed.")
 
 
 def main(flags):
-    logger = logging.getLogger()
+    #todo validador de flags (ip i domini (unique))
     if flags.domain:
         targets = [flags.domain]
         work_domini(targets,flags)
@@ -87,6 +85,7 @@ def main(flags):
             logger.error(f"[-] File not found: {flags.list_Ip or flags.list_Domain}")
             return
     elif flags.ip:
+
         targets = [flags.ip]
         work_ips(targets,flags)
     elif flags.list_Ip:
@@ -141,5 +140,4 @@ if __name__ == "__main__":
     parser.add_argument("--threads", type=int, default=4, help="Number of concurrent threads (default: 4)")
 
     args = parser.parse_args()
-    print(args)
     main(args)
