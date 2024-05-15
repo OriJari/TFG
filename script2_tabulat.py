@@ -11,7 +11,7 @@ from config import CommandEnumDef
 from concurrent.futures import ThreadPoolExecutor
 
 # logging.basicConfig(level=logging.INFO, filename="logs.log", filemode="w", format='%(asctime)s - %(levelname)s - %(message)s')
-# #auditoria per servidor (sistema de logs)
+# auditoria per servidor (sistema de logs)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 #globals
@@ -24,13 +24,12 @@ def is_real_target(target): #questionable
     except subprocess.CalledProcessError:
         return False
 
-
-def run_tool(command): # función para correr las herramientas de manera concurrente funca?
+'''def run_tool(command): # función para correr las herramientas de manera concurrente funca?
     output = subprocess.run(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     return output.stdout.decode()
-
+'''
 
 def filter_ips(text):
     ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
@@ -54,20 +53,23 @@ def filter_domains(text):
     domain_pattern = r'\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}\b'
     return re.findall(domain_pattern, text)
 
+
+def execute_order_66(command):
+    return os.popen(command).read()
+
 def work_domini(targets,flags):
-    with ThreadPoolExecutor(max_workers=flags.threads) as executor:
+    with ThreadPoolExecutor(max_workers=2) as executor:# canviar el nombre de max workers quan tingui totes les calls
         for target in targets:
-            if validate_domain(target):
-                tools = []
+            if validate_domain(target) and is_real_target(target):
+                futures = []
+                futures.append(executor.submit(execute_order_66, CommandEnumDef.NMAP.format(target)))
+                futures.append(executor.submit(execute_order_66, CommandEnumDef.DMIRTY.format(target)))
 
-                result_nmap = os.popen(CommandEnumDef.NMAP.format(target)).read()
-                result_dmitry = os.popen(CommandEnumDef.DMIRTY.format(target)).read()
-                logger.info(result_nmap)
-                logger.info(result_dmitry)
-
-
+                for future in futures:
+                    result = future.result()
+                    logger.info(result)
             else:
-                logger.error(f"[-] Domain {target} not valid")
+                logger.error(f"[-] Domain {target} not valid or not reachable")
 
         print(f"[+] OSINT and Recon for {target} completed.")
 
@@ -76,7 +78,7 @@ def work_domini(targets,flags):
 def work_ips(targets,flags):
     with ThreadPoolExecutor(max_workers=flags.threads) as executor:
         for target in targets:
-            if validate_ip(target):
+            if validate_ip(target) & is_real_target(target):
                 tools = []
 
                 result_nmap = os.popen("nmap -Pn -sV -T4 {}".format(target)).read()
@@ -85,12 +87,13 @@ def work_ips(targets,flags):
                 logger.info(result_dmitry)
 
             else:
-                logger.error(f"[-] IP {target} not valid")
+                logger.error(f"[-] IP {target} not valid or not reachable")
 
         print(f"[+] OSINT and Recon for {targets} completed.")
 
 
 def main(flags):
+    os.popen("rm -rf results/temp/*")
 
     if flags.domain:
         targets = [flags.domain]
@@ -135,6 +138,8 @@ def main(flags):
     output_file = f"{datetime.datetime.now()}_OSINT_tool_info_{flags.domain}.xlsx"
     results_workbook.save(output_file)
 
+    os.popen("rm -rf results/temp/*")
+
 
 def set_columns_width(ws):
     for col in ws.columns:
@@ -156,7 +161,6 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--vuln_scan", action="store_true", help="Perform only vulnerability scanning")
     parser.add_argument("-a", "--aggressive", action="store_true", help="Run scans in aggressive mode")
     parser.add_argument("-c", "--cautious", action="store_true", help="Run scans in cautious mode")
-    parser.add_argument("--threads", type=int, default=4, help="Number of concurrent threads (default: 4)")
 
     args = parser.parse_args()
     main(args)
