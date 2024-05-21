@@ -71,7 +71,7 @@ def work_domini(targets,flags):
             else:
                 logger.error(f"[-] Domain {target} not valid or not reachable")
 
-        print(f"[+] OSINT and Recon for {target} completed.")
+            print(f"[+] OSINT and Recon for {target} completed.")
 
 
 
@@ -90,7 +90,7 @@ def work_ips(targets,flags):
             else:
                 logger.error(f"[-] IP {target} not valid or not reachable")
 
-        print(f"[+] OSINT and Recon for {targets} completed.")
+            print(f"[+] OSINT and Recon for {target} completed.")
 
 
 def main(flags):
