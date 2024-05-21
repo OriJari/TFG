@@ -25,7 +25,6 @@ def run_tools(target):
 	os.system("wafw00f -v -a {}".format(target))
 	os.system("nuclei -u{}".format(target))
 	os.system("wpscan --url {}".format(target))
-	#os.system("prips {} | go run hakip2host.go").format(target))
 
 def main():
 

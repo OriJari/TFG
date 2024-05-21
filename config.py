@@ -3,12 +3,18 @@ from strenum import StrEnum
 # All comands can be modified to your liking.
 # Every class will be the comands that are called by default, so if you want to customize them, go ahead.
 # Further down, comments include a copy so as not to lose them once you have customized them.
-class CommandEnumDef(StrEnum):  #default comands
+
+WORDLIST = "path/to/wordlist.txt"
+SAVES = "results/temp/"
+
+class CommandEnumDef(StrEnum):  #default call
     NMAP = "nmap -Pn -p- -sV -A -T4 {}"
     DMIRTY = "dmitry -i -w -n -s -e {}"
-    SUBFINDER = "subfinder -all -d -t 100 {} -o temp/subfinder_subdomain_{}.txt"
-    SUBFINDERECURSIVE = "subfinder -all -recursive -d -t 100 {} -o temp/subfinderecursive_subdomain_{}.txt"
-    DNSX = "dnsx -l {} -a -resp -o temp/dnsx_subdomains_{}.txt"
+    SUBFINDER = f"subfinder -all -d -t 100 {{}} -o {SAVES}subfinder_subdomain_{{}}.txt"
+    SUBFINDERECURSIVE = f'subfinder -all -recursive -d -t 100 {{}} -o {SAVES}subfinderecursive_subdomain_{{}}.txt'
+    DNSX = f'dnsx -l {{}} -a -resp -o {SAVES}dnsx_subdomains_{{}}.txt'
+    FEROXBUSTER = f"feroxbuster -u {{}} -t 200 -d 0 --insecure --thorough --force-recursion -o {SAVES}feroxbuster_{{}}.txt --extensions html,php,asp,aspx,jsp,js,css,png,jpg,gif,pdf,xml,txt,log,bak,old"
+
 
 
 
@@ -18,6 +24,7 @@ class CommandEnumAgg(StrEnum):  #aggresive comands
 
 class CommandEnumCau(StrEnum):  #caution comands
     NMAP = "nmap -Pn -sV -T2 {}"
+    FEROXBUSTER = f"feroxbuster -u {{}} -t 200 -d 0 --thorough --insecure --force-recursion -o {SAVES}feroxbuster_{{}}.txt --extensions html,php,asp,aspx,jsp,js,css,png,jpg,gif,pdf,xml,txt,log,bak,old --random-agent"
 
 
 '''

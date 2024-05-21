@@ -58,7 +58,7 @@ def execute_order_66(command):
     return os.popen(command).read()
 
 def work_domini(targets,flags):
-    with ThreadPoolExecutor(max_workers=2) as executor:# canviar el nombre de max workers quan tingui totes les calls
+    with ThreadPoolExecutor(max_workers=2) as executor: 4# canviar el nombre de max workers quan tingui totes les calls
         for target in targets:
             if validate_domain(target) and is_real_target(target):
                 futures = []
@@ -76,6 +76,7 @@ def work_domini(targets,flags):
 
 
 def work_ips(targets,flags):
+    # per llista de ips mirar rang
     with ThreadPoolExecutor(max_workers=flags.threads) as executor:
         for target in targets:
             if validate_ip(target) & is_real_target(target):
