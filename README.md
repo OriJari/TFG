@@ -1,9 +1,17 @@
 # TFG
+This tool has been developed as a final grade's project. 
 
+Tool for recognition and scanning, services, technologies and vulnerabilities, automated.
+
+Script that collects different information gathering tools in the phase of recognizing and scanning a pentest. Generate an xlsx file with all the information found.
 ## How to isntall
-U need to have python 3.12 installed 
+You must have installed Python 3 (recomended 3.12)
+then execute the following comands:
+
+```sudo ./installation_tools.sh ```
 
 ```pip install -r requirements.txt```
+
 ## Usage
 ```
 usage: script2_tabulat.py [-h] [-i IP] [-d DOMAIN] [-lI LIST_IP] [-lD LIST_DOMAIN] [-r] [-v] [-a] [-c] [--threads THREADS]
