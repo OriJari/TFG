@@ -11,6 +11,8 @@ then execute the following comands:
 ```sudo ./installation_tools.sh ```
 
 ```pip install -r requirements.txt```
+### Recomendation
+It is recomendet to try each tool that don't cause any issue, and to update them.
 
 ## Usage
 ```
@@ -31,8 +33,8 @@ options:
   -v, --vuln_scan       Perform only vulnerability scanning
   -a, --aggressive      Run scans in aggressive mode
   -c, --cautious        Run scans in cautious mode
-  --threads THREADS     Number of concurrent threads (default: 4)
 ```
+
 ## Running 
 ### Single domain
 ``python3 script -d domini.com``
@@ -42,3 +44,19 @@ options:
 ``python3 script -lD domini_list.txtn``
 ### Multiple IPs
 ``python3 script -lI IPs_list.txt``
+
+## APIs 
+You can vinculate diferents APIs to the tools, theHarvester or wpscan. 
+
+### theHarvester
+For the theHarvester you can find more info here, at their repo and following the configuration they sey, it will work for the tool.
+https://github.com/laramies/theHarvester
+
+
+### wpscan
+For the wpscan, at file config.py as a constant there is the line 
+
+```PI_WPSCAN = "YOUR_API_TOKEN" #add your api token, it's free, only with register at https://wpscan.com/```
+
+Register to the web of wpscan https://wpscan.com/, and with a free account you get acces to the API.
+
