@@ -16,24 +16,20 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 # globals
 logger = logging.getLogger()
+SAVES = "results/temp/"
 
-def is_real_target(target): # questionable
+def is_real_target(target):  # questionable
     try:
         subprocess.check_output(["ping", "-c", "1", target], stderr=subprocess.DEVNULL)
         return True
     except subprocess.CalledProcessError:
         return False
 
-'''def run_tool(command): # función para correr las herramientas de manera concurrente funca?
-    output = subprocess.run(
-        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    return output.stdout.decode()
-'''
 
 def filter_ips(text):
     ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
     return re.findall(ip_pattern, text)
+
 
 def validate_ip(ip):
     try:
@@ -42,6 +38,7 @@ def validate_ip(ip):
     except ValueError:
         return False
 
+
 def validate_domain(domain):
     try:
         validators.domain(domain)
@@ -49,33 +46,50 @@ def validate_domain(domain):
     except ValueError:
         return False
 
+
 def filter_domains(text):
     domain_pattern = r'\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}\b'
     return re.findall(domain_pattern, text)
 
+
 def execute_order_66(command):
     return os.popen(command).read()
+
 
 def work_domini(targets, flags):
     for target in targets:
         if validate_domain(target) and is_real_target(target):
-            result_nmap = execute_order_66(CommandEnumDef.NMAP.format(target))
+            print(f"[+] OSINT and Recon for {target} started.")
+            print(f"[·] Dmitry for {target} started.")
             result_dmirty = execute_order_66(CommandEnumDef.DMIRTY.format(target))
+            print(f"[·] Dmitry for {target} ended.")
+            print(f"[·] subfinder for {target} started.")
+            result_subfinder = execute_order_66(CommandEnumDef.SUBFINDER.format(target))
+            print(f"[·] subfinder for {target} ended.")
+            print(f"[·] DNSX for {target} started.")
+            result_dnsx = execute_order_66(CommandEnumDef.DNSX.format(f"{SAVES}subfinder_subdomain_{target}.txt)"))
+            execute_order_66(CommandEnumDef.DNSX2.format(f"{SAVES}subfinder_subdomain_{target}.txt)"))
+            print(f"[·] DNSX for {target} ended.")
+            print(f"[·] NMAP for {target} started.")
+            result_nmap = execute_order_66(CommandEnumDef.NMAP.format(f"{SAVES}dnsx2_subdomains_{{}}.txt"))
+            print(f"[·] NMAP for {target} ended.")
 
-            logger.info(result_nmap)
             logger.info(result_dmirty)
+            logger.info(result_subfinder)
+            logger.info(result_dnsx)
+            logger.info(result_nmap)
             logger.info(f"[+] OSINT and Recon for {target} completed.")
         else:
             logger.error(f"[-] Domain {target} not valid or not reachable")
 
-    print(f"[+] OSINT and Recon for {target} completed.")
+        print(f"[+] OSINT and Recon for {target} completed.")
+
 
 def work_ips(targets, flags):
     # per llista de ips mirar rang
     with ProcessPoolExecutor(max_workers=flags.threads) as executor:
         for target in targets:
             if validate_ip(target) and is_real_target(target):
-
 
                 result_nmap = os.popen("nmap -Pn -sV -T4 {}".format(target)).read()
                 result_dmitry = os.popen("dmitry -i -w -n -s -e {}".format(target)).read()
@@ -85,6 +99,7 @@ def work_ips(targets, flags):
                 logger.error(f"[-] IP {target} not valid or not reachable")
 
             print(f"[+] OSINT and Recon for {target} completed.")
+
 
 def main(flags):
     os.popen("rm -rf results/temp/*")
@@ -127,6 +142,7 @@ def main(flags):
 
     os.popen("rm -rf results/temp/*")
 
+
 def set_columns_width(ws):
     for col in ws.columns:
         max_length = 0
@@ -135,6 +151,7 @@ def set_columns_width(ws):
                 max_length = max(max_length, len(str(cell.value)))
         adjusted_width = (max_length + 2) * 1.2
         ws.column_dimensions[col[0].column_letter].width = adjusted_width
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Recon & Scan automated script tool")
