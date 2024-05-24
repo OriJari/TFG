@@ -17,6 +17,7 @@ API_WPSCAN = "sIxe5FoNOPimo8LN3sbKErvzBr7Q7X29JDqVnYIcxVs" #add your api token, 
 SAVES = "results/temp/"
 
 class CommandEnumDef(StrEnum):  #default call
+    NMAPLIST = "nmap -T5 -iL {}"
     NMAP = "nmap -T5 {}"
     DMIRTY = "dmitry -i -w -n -s -e {}"
     SUBFINDER = f"subfinder -all -d {{}} -t 100  -o {SAVES}subfinder_subdomain_{{}}.txt"

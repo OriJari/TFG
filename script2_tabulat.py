@@ -62,22 +62,23 @@ def work_domini(targets, flags):
             print(f"[+] OSINT and Recon for {target} started.")
             print(f"[·] Dmitry for {target} started.")
             result_dmirty = execute_order_66(CommandEnumDef.DMIRTY.format(target))
+            logger.info(result_dmirty)
             print(f"[·] Dmitry for {target} ended.")
             print(f"[·] subfinder for {target} started.")
-            result_subfinder = execute_order_66(CommandEnumDef.SUBFINDER.format(target))
+            result_subfinder = execute_order_66(CommandEnumDef.SUBFINDER.format(target,target))
+            logger.info(result_subfinder)
             print(f"[·] subfinder for {target} ended.")
             print(f"[·] DNSX for {target} started.")
-            result_dnsx = execute_order_66(CommandEnumDef.DNSX.format(f"{SAVES}subfinder_subdomain_{target}.txt)"))
-            execute_order_66(CommandEnumDef.DNSX2.format(f"{SAVES}subfinder_subdomain_{target}.txt)"))
+            result_dnsx = execute_order_66(CommandEnumDef.DNSX.format(f"{SAVES}subfinder_subdomain_{target}.txt",target))
+            execute_order_66(CommandEnumDef.DNSX2.format(f"{SAVES}subfinder_subdomain_{target}.txt",target))
+            logger.info(result_dnsx)
             print(f"[·] DNSX for {target} ended.")
             print(f"[·] NMAP for {target} started.")
-            result_nmap = execute_order_66(CommandEnumDef.NMAP.format(f"{SAVES}dnsx2_subdomains_{{}}.txt"))
+            result_nmap = execute_order_66(CommandEnumDef.NMAPLIST.format(f"{SAVES}dnsx2_subdomains_{target}.txt"))
+            logger.info(result_nmap)
             print(f"[·] NMAP for {target} ended.")
 
-            logger.info(result_dmirty)
-            logger.info(result_subfinder)
-            logger.info(result_dnsx)
-            logger.info(result_nmap)
+
             logger.info(f"[+] OSINT and Recon for {target} completed.")
         else:
             logger.error(f"[-] Domain {target} not valid or not reachable")
@@ -137,7 +138,7 @@ def main(flags):
 
     set_columns_width(ws_single_model)
 
-    output_file = f"{datetime.datetime.now()}_OSINT_tool_info_{flags.domain}.xlsx"
+    output_file = f"results/{datetime.datetime.now()}_OSINT_tool_info_{flags.domain}.xlsx"
     results_workbook.save(output_file)
 
     os.popen("rm -rf results/temp/*")
