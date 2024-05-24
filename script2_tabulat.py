@@ -8,7 +8,7 @@ import datetime
 import ipaddress
 import validators
 from config import CommandEnumDef
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 # logging.basicConfig(level=logging.INFO, filename="logs.log", filemode="w", format='%(asctime)s - %(levelname)s - %(message)s')
 # auditoria per servidor (sistema de logs)
@@ -57,27 +57,25 @@ def execute_order_66(command):
     return os.popen(command).read()
 
 def work_domini(targets, flags):
-    with ThreadPoolExecutor(max_workers=2) as executor: # canviar el nombre de max workers quan tingui totes les calls
-        for target in targets:
-            if validate_domain(target) and is_real_target(target):
-                futures = []
-                futures.append(executor.submit(execute_order_66, CommandEnumDef.NMAP.format(target)))
-                futures.append(executor.submit(execute_order_66, CommandEnumDef.DMIRTY.format(target)))
+    for target in targets:
+        if validate_domain(target) and is_real_target(target):
+            result_nmap = execute_order_66(CommandEnumDef.NMAP.format(target))
+            result_dmirty = execute_order_66(CommandEnumDef.DMIRTY.format(target))
 
-                for future in futures:
-                    result = future.result()
-                    logger.info(result)
-            else:
-                logger.error(f"[-] Domain {target} not valid or not reachable")
+            logger.info(result_nmap)
+            logger.info(result_dmirty)
+            logger.info(f"[+] OSINT and Recon for {target} completed.")
+        else:
+            logger.error(f"[-] Domain {target} not valid or not reachable")
 
-            print(f"[+] OSINT and Recon for {target} completed.")
+    print(f"[+] OSINT and Recon for {target} completed.")
 
 def work_ips(targets, flags):
     # per llista de ips mirar rang
-    with ThreadPoolExecutor(max_workers=flags.threads) as executor:
+    with ProcessPoolExecutor(max_workers=flags.threads) as executor:
         for target in targets:
             if validate_ip(target) and is_real_target(target):
-                tools = []
+
 
                 result_nmap = os.popen("nmap -Pn -sV -T4 {}".format(target)).read()
                 result_dmitry = os.popen("dmitry -i -w -n -s -e {}".format(target)).read()
