@@ -14,10 +14,10 @@ from concurrent.futures import ThreadPoolExecutor
 # auditoria per servidor (sistema de logs)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-#globals
+# globals
 logger = logging.getLogger()
 
-def is_real_target(target): #questionable
+def is_real_target(target): # questionable
     try:
         subprocess.check_output(["ping", "-c", "1", target], stderr=subprocess.DEVNULL)
         return True
@@ -53,12 +53,11 @@ def filter_domains(text):
     domain_pattern = r'\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}\b'
     return re.findall(domain_pattern, text)
 
-
 def execute_order_66(command):
     return os.popen(command).read()
 
-def work_domini(targets,flags):
-    with ThreadPoolExecutor(max_workers=2) as executor: 4# canviar el nombre de max workers quan tingui totes les calls
+def work_domini(targets, flags):
+    with ThreadPoolExecutor(max_workers=2) as executor: # canviar el nombre de max workers quan tingui totes les calls
         for target in targets:
             if validate_domain(target) and is_real_target(target):
                 futures = []
@@ -73,49 +72,44 @@ def work_domini(targets,flags):
 
             print(f"[+] OSINT and Recon for {target} completed.")
 
-
-
-def work_ips(targets,flags):
+def work_ips(targets, flags):
     # per llista de ips mirar rang
     with ThreadPoolExecutor(max_workers=flags.threads) as executor:
         for target in targets:
-            if validate_ip(target) & is_real_target(target):
+            if validate_ip(target) and is_real_target(target):
                 tools = []
 
                 result_nmap = os.popen("nmap -Pn -sV -T4 {}".format(target)).read()
                 result_dmitry = os.popen("dmitry -i -w -n -s -e {}".format(target)).read()
                 logger.info(result_nmap)
                 logger.info(result_dmitry)
-
             else:
                 logger.error(f"[-] IP {target} not valid or not reachable")
 
             print(f"[+] OSINT and Recon for {target} completed.")
-
 
 def main(flags):
     os.popen("rm -rf results/temp/*")
 
     if flags.domain:
         targets = [flags.domain]
-        work_domini(targets,flags)
+        work_domini(targets, flags)
     elif flags.list_Domain:
         try:
             with open(flags.list_Domain, 'r') as file:
                 targets = [line.strip() for line in file.readlines() if line.strip()]
-                work_domini(targets,flags)
+                work_domini(targets, flags)
         except FileNotFoundError:
             logger.error(f"[-] File not found: {flags.list_Ip or flags.list_Domain}")
             return
     elif flags.ip:
-
         targets = [flags.ip]
-        work_ips(targets,flags)
+        work_ips(targets, flags)
     elif flags.list_Ip:
         try:
             with open(flags.list_Ip, 'r') as file:
                 targets = [line.strip() for line in file.readlines() if line.strip()]
-                work_ips(targets,flags)
+                work_ips(targets, flags)
         except FileNotFoundError:
             logger.error(f"[-] File not found: {flags.list_Ip or flags.list_Domain}")
             return
@@ -123,16 +117,10 @@ def main(flags):
         logger.error("[-] No target specified. Use -i , -d , -lI or -lD to specify the IP(s) or the Domain(s).")
         return
 
-
     results_workbook = openpyxl.Workbook()
 
     ws_single_model = results_workbook.create_sheet(title="Dummy result")
-    ws_single_model.append(['DNS',
-                            'IPS',
-                            'mails',
-                            'domains',
-                            'subdomains'
-                            ])
+    ws_single_model.append(['DNS', 'IPS', 'mails', 'domains', 'subdomains'])
 
     set_columns_width(ws_single_model)
 
@@ -140,7 +128,6 @@ def main(flags):
     results_workbook.save(output_file)
 
     os.popen("rm -rf results/temp/*")
-
 
 def set_columns_width(ws):
     for col in ws.columns:
@@ -150,7 +137,6 @@ def set_columns_width(ws):
                 max_length = max(max_length, len(str(cell.value)))
         adjusted_width = (max_length + 2) * 1.2
         ws.column_dimensions[col[0].column_letter].width = adjusted_width
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Recon & Scan automated script tool")

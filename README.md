@@ -8,6 +8,10 @@ Script that collects different information gathering tools in the phase of recog
 You must have installed Python 3 (recomended 3.12)
 then execute the following comands:
 
+(recomended to update apt)
+
+```sudo apt update```
+
 ```sudo ./installation_tools.sh ```
 
 ```pip install -r requirements.txt```
