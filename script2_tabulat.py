@@ -7,7 +7,8 @@ import openpyxl
 import datetime
 import ipaddress
 import validators
-from config import CommandEnumDef
+import json
+from config import CommandEnumDef, CommandEnumAgg, CommandEnumCau
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 # logging.basicConfig(level=logging.INFO, filename="logs.log", filemode="w", format='%(asctime)s - %(levelname)s - %(message)s')
@@ -17,6 +18,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # globals
 logger = logging.getLogger()
 SAVES = "results/temp/"
+
 
 def is_real_target(target):  # questionable
     try:
@@ -52,6 +54,40 @@ def filter_domains(text):
     return re.findall(domain_pattern, text)
 
 
+def treat_json(filename, data):
+    with open(filename, 'w') as f:
+        for item in data:
+            f.write("%s\n" % item)
+
+
+def save_info(source, output, target):
+    if source == "harvester":
+        treat_json(f'{SAVES}{target}_asns.txt', output.get('asns', []))
+        treat_json(f'{SAVES}{target}_emails.txt', output.get('emails', []))
+        treat_json(f'{SAVES}{target}_hosts.txt', output.get('hosts', []))
+        treat_json(f'{SAVES}{target}_urls.txt', output.get('interesting_urls', []))
+        treat_json(f'{SAVES}{target}_ips.txt', output.get('ips', []))
+        treat_json(f'{SAVES}{target}_shodan.txt', output.get('shodan', []))
+
+def merge_unique_ips(file1, file2, output_file):
+    ips_set = set()
+    with open(file1, 'r') as f1:
+        for line in f1:
+            ip = line.strip()
+            if ip:
+                ips_set.add(ip)
+
+    with open(file2, 'r') as f2:
+        for line in f2:
+            ip = line.strip()
+            if ip:
+                ips_set.add(ip)
+
+    with open(output_file, 'w') as output:
+        for ip in sorted(ips_set):
+            output.write(f"{ip}\n")
+
+
 def execute_order_66(command):
     return os.popen(command).read()
 
@@ -59,31 +95,48 @@ def execute_order_66(command):
 def work_domini(targets, flags):
     for target in targets:
         if validate_domain(target) and is_real_target(target):
-            print(f"[+] OSINT and Recon for {target} started.")
-            print(f"[·] Dmitry for {target} started.")
-            result_dmirty = execute_order_66(CommandEnumDef.DMIRTY.format(target))
-            logger.info(result_dmirty)
-            print(f"[·] Dmitry for {target} ended.")
-            print(f"[·] subfinder for {target} started.")
-            result_subfinder = execute_order_66(CommandEnumDef.SUBFINDER.format(target,target))
-            logger.info(result_subfinder)
-            print(f"[·] subfinder for {target} ended.")
-            print(f"[·] DNSX for {target} started.")
-            result_dnsx = execute_order_66(CommandEnumDef.DNSX.format(f"{SAVES}subfinder_subdomain_{target}.txt",target))
-            execute_order_66(CommandEnumDef.DNSX2.format(f"{SAVES}subfinder_subdomain_{target}.txt",target))
-            logger.info(result_dnsx)
-            print(f"[·] DNSX for {target} ended.")
-            print(f"[·] NMAP for {target} started.")
-            result_nmap = execute_order_66(CommandEnumDef.NMAPLIST.format(f"{SAVES}dnsx2_subdomains_{target}.txt"))
-            logger.info(result_nmap)
-            print(f"[·] NMAP for {target} ended.")
+            if not flags.vuln_scan:
+                print(f"[+] OSINT and Recon for {target} started.")
 
+                print(f"[·] Dmitry for {target} started.")
+                result_dmirty = execute_order_66(CommandEnumDef.DMIRTY.format(target))
+                logger.info(result_dmirty)
+                print(f"[·] Dmitry for {target} ended.")
 
-            logger.info(f"[+] OSINT and Recon for {target} completed.")
+                print(f"[·] theHarvester for {target} started.")
+                result_harvester = execute_order_66(CommandEnumDef.HARVESTER.format(target, target))
+                logger.info(result_harvester)
+                with open(f'{SAVES}harvester_{target}', 'r') as file:
+                    output = json.load(file)
+                save_info("harvester", output, target)
+                print(f"[·] theHarvester for {target} ended.")
+
+                print(f"[·] subfinder for {target} started.")
+                result_subfinder = execute_order_66(CommandEnumDef.SUBFINDER.format(target, target))
+                logger.info(result_subfinder)
+                print(f"[·] subfinder for {target} ended.")
+
+                print(f"[·] DNSX for {target} started.")
+                result_dnsx = execute_order_66(CommandEnumDef.DNSX.format(f"{SAVES}subfinder_subdomain_{target}.txt", target))
+                execute_order_66(CommandEnumDef.DNSX2.format(f"{SAVES}subfinder_subdomain_{target}.txt", target))
+                logger.info(result_dnsx)
+                print(f"[·] DNSX for {target} ended.")
+
+                merge_unique_ips(f'{SAVES}{target}_ips.txt', f'{SAVES}dnsx2_subdomains_{target}.txt', f'{SAVES}total_ips{target}.txt')
+
+                print(f"[·] NMAP for {target} started.")
+                if flags.aggressive:
+                    result_nmap = execute_order_66(CommandEnumAgg.NMAPLIST.format(f"{SAVES}total_ips{target}.txt"))
+                elif flags.cautious:
+                    result_nmap = execute_order_66(CommandEnumCau.NMAPLIST.format(f"{SAVES}total_ips{target}.txt"))
+                else:
+                    result_nmap = execute_order_66(CommandEnumDef.NMAPLIST.format(f"{SAVES}total_ips{target}.txt"))
+                logger.info(result_nmap)
+                print(f"[·] NMAP for {target} ended.")
+
+                logger.info(f"[+] OSINT and Recon for {target} completed.")
         else:
             logger.error(f"[-] Domain {target} not valid or not reachable")
-
-        print(f"[+] OSINT and Recon for {target} completed.")
 
 
 def work_ips(targets, flags):
@@ -166,4 +219,5 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--cautious", action="store_true", help="Run scans in cautious mode")
 
     args = parser.parse_args()
+    print (args)
     main(args)

@@ -17,8 +17,8 @@ API_WPSCAN = "sIxe5FoNOPimo8LN3sbKErvzBr7Q7X29JDqVnYIcxVs" #add your api token, 
 SAVES = "results/temp/"
 
 class CommandEnumDef(StrEnum):  #default call
-    NMAPLIST = "nmap -T5 -iL {}"
-    NMAP = "nmap -T5 {}"
+    NMAPLIST = "nmap -T4 -iL {}"
+    NMAP = "nmap -T4 {}"
     DMIRTY = "dmitry -i -w -n -s -e {}"
     SUBFINDER = f"subfinder -all -d {{}} -t 100  -o {SAVES}subfinder_subdomain_{{}}.txt"
     SUBFINDERECURSIVE = f'subfinder -all -recursive -d {{}} -t 100  -o {SAVES}subfinderecursive_subdomain_{{}}.txt'
@@ -28,7 +28,7 @@ class CommandEnumDef(StrEnum):  #default call
     GOBUSTERDNS = f"gobuster dns -d {{}} -w {WORDLIST_DNS} -t 100 -o {SAVES}gobuster_dns_{{}}.txt"
     GOBUSTERDIR = f"gobuster dir -u https://{{}} -w {WORDLIST_DIR} -x html,php,asp,aspx,jsp,js,css,png,jpg,gif,pdf,xml,txt,log,bak,old -t 100 -o {SAVES}gobuster_dir_{{}}.txt"
     NSLOOKUP = "nslookup {}" #cal?
-    HARVESTER = f"theHarvester -d {{}} -b all -n -r >> {SAVES}harvester_{{}}.txt"
+    HARVESTER = f"theHarvester -d {{}} -b all -n -r -f {SAVES}harvester_{{}}"
     WAF = f"wafw00f https://{{}} -a -o {SAVES}wafw00f_{{}}.txt -f txt"
     WPSACN = f"wpscan --url https://{{}} --random-user-agent --enumerate ap,at,u,m -t 100"
     WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --api-token {API_WPSCAN}"
@@ -38,12 +38,14 @@ class CommandEnumDef(StrEnum):  #default call
 
 
 class CommandEnumAgg(StrEnum):  #aggresive comands
-    NMAP = "nmap -Pn -sV -T5 {}"
+    NMAPLIST = "nmap -T5 -iL {}"
+    NMAP = "nmap -T5 {}"
     WPSACN = f"wpscan --url https://{{}} -t 100 --random-user-agent --enumerate ap,at,u,m --detection-mode aggressive --plugins-detection aggressive --themes-detection aggressive --user-detection aggresive "
     WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --detection-mode aggressive  --api-token {API_WPSCAN}"
 
 class CommandEnumCau(StrEnum):  #caution comands
-    NMAP = "nmap -Pn -sV -T2 {}"
+    NMAPLIST = "nmap -T2 -iL {}"
+    NMAP = "nmap -T2 {}"
     FEROXBUSTER = f"feroxbuster -u {{}} -t 200 -d 0 --thorough --insecure --force-recursion -o {SAVES}feroxbuster_{{}}.txt --extensions html,php,asp,aspx,jsp,js,css,png,jpg,gif,pdf,xml,txt,log,bak,old --random-agent"
     WPSACN = f"wpscan --url https://{{}} -t 100 --random-user-agent --enumerate ap,at,u,m --detection-mode passive --plugins-detection passive --themes-detection passive --user-detection passive "
     WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --detection-mode passive  --api-token {API_WPSCAN}"

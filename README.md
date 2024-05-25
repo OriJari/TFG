@@ -56,7 +56,6 @@ You can vinculate diferents APIs to the tools, theHarvester or wpscan.
 For the theHarvester you can find more info here, at their repo and following the configuration they sey, it will work for the tool.
 https://github.com/laramies/theHarvester
 
-
 ### wpscan
 For the wpscan, at file config.py as a constant there is the line 
 
