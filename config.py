@@ -6,9 +6,9 @@ from strenum import StrEnum
 
 #set your diferents wordlists here
 WORDLIST_DNS = "lists/amass/all.txt"
-WORDLIST_SUBDOMAINS = "lists/amass/subdomains-top1mil-110000.txt"
+WORDLIST_SUBDOMAINS = "lists/amass/subdomains-top1mil-5000.txt"
 WORDLIST_DIR = "lists/dirbuster/directory-list-2.3-medium.txt"
-WORDLIST_FUZZ =""
+
 
 #set your api tokens here
 API_WPSCAN = "sIxe5FoNOPimo8LN3sbKErvzBr7Q7X29JDqVnYIcxVs" #add your api token, it's free, only with register at https://wpscan.com/
@@ -27,8 +27,7 @@ class CommandEnumDef(StrEnum):  #default call
     FEROXBUSTER = f"feroxbuster -u {{}} -t 200 -d 0 --insecure --thorough --force-recursion -o {SAVES}feroxbuster_{{}}.txt --extensions html,php,asp,aspx,jsp,js,css,png,jpg,gif,pdf,xml,txt,log,bak,old"
     GOBUSTERDNS = f"gobuster dns -d {{}} -w {WORDLIST_DNS} -t 100 -o {SAVES}gobuster_dns_{{}}.txt"
     GOBUSTERDIR = f"gobuster dir -u https://{{}} -w {WORDLIST_DIR} -x html,php,asp,aspx,jsp,js,css,png,jpg,gif,pdf,xml,txt,log,bak,old -t 100 -o {SAVES}gobuster_dir_{{}}.txt"
-    NSLOOKUP = "nslookup {}" #cal?
-    HARVESTER = f"theHarvester -d {{}} -b all -n -r -f {SAVES}harvester_{{}}"
+    HARVESTER = f"theHarvester -d {{}} -b all -n -r -f {SAVES}harvester_{{}}.com"
     WAF = f"wafw00f https://{{}} -a -o {SAVES}wafw00f_{{}}.txt -f txt"
     WPSACN = f"wpscan --url https://{{}} --random-user-agent --enumerate ap,at,u,m -t 100"
     WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --api-token {API_WPSCAN}"
@@ -61,7 +60,6 @@ class CommandEnumDef(StrEnum):  #default call
     FEROXBUSTER = f"feroxbuster -u {{}} -t 200 -d 0 --insecure --thorough --force-recursion -o {SAVES}feroxbuster_{{}}.txt --extensions html,php,asp,aspx,jsp,js,css,png,jpg,gif,pdf,xml,txt,log,bak,old"
     GOBUSTERDNS = f"gobuster dns -d {{}} -w {WORDLIST_DNS} -t 100 -o {SAVES}gobuster_dns_{{}}.txt"
     GOBUSTERDIR = f"gobuster dir -u https://{{}} -w {WORDLIST_DIR} -x html,php,asp,aspx,jsp,js,css,png,jpg,gif,pdf,xml,txt,log,bak,old -t 100 -o {SAVES}gobuster_dir_{{}}.txt"
-    NSLOOKUP = "nslookup {}"
     HARVESTER = f"theHarvester -d {{}} -b all -n -r >> {SAVES}harvester_{{}}.txt"
     WAF = f"wafw00f https://{{}} -a -o {SAVES}wafw00f_{{}}.txt -f txt"
     WPSACN = f"wpscan --url https://{{}} --random-user-agent --enumerate ap,at,u,m -t 100"
