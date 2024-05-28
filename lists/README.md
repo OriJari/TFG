@@ -8,3 +8,10 @@ Within the `lists` directory, you'll find several subdirectories. Each of these 
 
 You have the flexibility to add your own wordlists or directories containing wordlists to this directory. 
 This allows you to customize the tool in the `config.py` document.
+
+
+
+
+### Credit
+The wordlists have been obtained from the kali distribution and repositore from maverkNerd/wordlists
+https://github.com/maverickNerd/wordlists

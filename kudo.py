@@ -27,11 +27,9 @@ def is_real_target(target):  # questionable
     except subprocess.CalledProcessError:
         return False
 
-
 def filter_ips(text):
     ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
     return re.findall(ip_pattern, text)
-
 
 def validate_ip(ip):
     try:
@@ -40,7 +38,6 @@ def validate_ip(ip):
     except ValueError:
         return False
 
-
 def validate_domain(domain):
     try:
         validators.domain(domain)
@@ -48,24 +45,20 @@ def validate_domain(domain):
     except ValueError:
         return False
 
-
 def filter_domains(text):
     domain_pattern = r'\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}\b'
     return re.findall(domain_pattern, text)
-
 
 def treat_json(filename, data):
     with open(filename, 'w') as f:
         for item in data:
             f.write("%s\n" % item)
 
-
 def save_info(source, output, target):
     if source == "harvester":
         for section, content in output.items():
             if isinstance(content, list):
                 treat_json(f'{SAVES}harvester_{target}_{section}.txt', content)
-
 
 def merge_unique_ips(file1, file2, output_file):
     ips_set = set()
@@ -85,17 +78,27 @@ def merge_unique_ips(file1, file2, output_file):
         for ip in sorted(ips_set):
             output.write(f"{ip}\n")
 
+def merge_unique_subdomain(file_subfinder, file_gobuster, output_file):
+    with open(file_subfinder, 'r') as f:
+        subfinder_lines = f.read().splitlines()
+
+    with open(file_gobuster, 'r') as f:
+        gobuster_lines = [line.replace('Found: ', '').strip() for line in f]
+
+    combined_lines = list(set(subfinder_lines + gobuster_lines))
+
+    with open(output_file, 'w') as f:
+        for line in sorted(combined_lines):
+            f.write(line + '\n')
 
 def execute_order_66(command):
     return os.popen(command).read()
-
 
 def exec_dmitry(target):
     print(f"[·] Dmitry for {target} started.")
     result_dmirty = execute_order_66(CommandEnumDef.DMIRTY.format(target))
     logger.info(result_dmirty)
     print(f"[·] Dmitry for {target} ended.")
-
 
 def exec_harvester(target):
     print(f"[·] theHarvester for {target} started.")
@@ -106,21 +109,28 @@ def exec_harvester(target):
     save_info("harvester", output, target)
     print(f"[·] theHarvester for {target} ended.")
 
-
-def exec_subfinder(target):
+def exec_subfinder(target,flags):
     print(f"[·] subfinder for {target} started.")
-    result_subfinder = execute_order_66(CommandEnumDef.SUBFINDER.format(target, target))
+    if flags.cautious:
+        result_subfinder = execute_order_66(CommandEnumCau.SUBFINDER.format(target, target))
+    else:
+        result_subfinder = execute_order_66(CommandEnumDef.SUBFINDER.format(target, target))
     logger.info(result_subfinder)
     print(f"[·] subfinder for {target} ended.")
 
-
-def exec_dnsx(target):
+def exec_dnsx(target,flags):
     print(f"[·] DNSX for {target} started.")
-    result_dnsx = execute_order_66(CommandEnumDef.DNSX.format(f"{SAVES}subfinder_subdomain_{target}.txt", target))
-    execute_order_66(CommandEnumDef.DNSX2.format(f"{SAVES}subfinder_subdomain_{target}.txt", target))
+    if flags.aggresive:
+        result_dnsx = execute_order_66(CommandEnumAgg.DNSX.format(f"{SAVES}total_subdomains{target}.txt", target))
+        execute_order_66(CommandEnumAgg.DNSX2.format(f"{SAVES}total_subdomains{target}.txt", target))
+    elif flags.cautious:
+        result_dnsx = execute_order_66(CommandEnumCau.DNSX.format(f"{SAVES}total_subdomains{target}.txt", target))
+        execute_order_66(CommandEnumCau.DNSX2.format(f"{SAVES}total_subdomains{target}.txt", target))
+    else:
+        result_dnsx = execute_order_66(CommandEnumDef.DNSX.format(f"{SAVES}total_subdomains{target}.txt", target))
+        execute_order_66(CommandEnumDef.DNSX2.format(f"{SAVES}total_subdomains{target}.txt", target))
     logger.info(result_dnsx)
     print(f"[·] DNSX for {target} ended.")
-
 
 def exec_nmap(target, flags):
     print(f"[·] NMAP for {target} started.")
@@ -133,6 +143,26 @@ def exec_nmap(target, flags):
     logger.info(result_nmap)
     print(f"[·] NMAP for {target} ended.")
 
+def exec_ferox(target,flags):
+    logger.info(f"[·] Feroxbuster for {target} started.")
+    if flags.cautious:
+        result_ferox = execute_order_66(CommandEnumCau.FEROXBUSTER.format(target,target))
+    else:
+        result_ferox = execute_order_66(CommandEnumDef.FEROXBUSTER.format(target,target))
+    logger.info(result_ferox)
+    logger.info(f"[·] Feroxbuster for {target} ended.")
+
+def exec_gobuster(target):
+    logger.info(f"[·] Gobuster DNS for {target} starterd.")
+    result_gobuster_dns = execute_order_66(CommandEnumDef.GOBUSTERDNS.format(target))
+    logger.info(result_gobuster_dns)
+    logger.info(f"[·] Gobuster DNS for {target} ended.")
+
+    logger.info(f"[·] Gobuster VHOST for {target} starterd.")
+    result_gobuster_vhost = execute_order_66(CommandEnumDef.GOBUSTERVHOST.format(target))
+    logger.info(result_gobuster_vhost)
+    logger.info(f"[·] Gobuster VHOST for {target} ended.")
+
 
 def work_domini(targets, flags):
     for target in targets:
@@ -141,16 +171,20 @@ def work_domini(targets, flags):
             print(f"[+] OSINT and Recon for {target} started.")
             exec_dmitry(target)
             exec_harvester(target)
-            exec_subfinder(target)
+            exec_subfinder(target,flags)
+            exec_gobuster(target)
+
+            merge_unique_subdomain(f"{SAVES}subfinder_subdomain_{target}.txt",f"{SAVES}gobuster_dns_{target}.txt", f'{SAVES}total_subdomains{target}.txt')
+
             try:
-                exec_dnsx(target)
+                exec_dnsx(target,flags)
             except:
                 logger.error("[-] DNSX failed")
 
-            merge_unique_ips(f'{SAVES}harvester_{target}_ips.txt', f'{SAVES}dnsx2_subdomains_{target}.txt',
-                             f'{SAVES}total_ips{target}.txt')
+            merge_unique_ips(f'{SAVES}harvester_{target}_ips.txt', f'{SAVES}dnsx2_subdomains_{target}.txt',f'{SAVES}total_ips{target}.txt')
 
             exec_nmap(target, flags)
+            exec_ferox(target,flags)
 
             logger.info(f"[+] OSINT and Recon for {target} completed.")
         else:

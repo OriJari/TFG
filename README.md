@@ -1,9 +1,9 @@
-# TFG
-This tool has been developed as a final grade's project. 
+# TFG - KUDO
+KUDO has been developed as a final grade's project. 
 
-Tool for recognition and scanning, services, technologies and vulnerabilities, automated.
+Kudo is for recognition and scanning, services, technologies and vulnerabilities, automated.
 
-Script that collects different information gathering tools in the phase of recognizing and scanning a pentest. Generate an xlsx file with all the information found.
+Is a Script that collects different information gathering tools in the phase of recognizing and scanning a pentest. Generate an xlsx file with all the information found.
 ## How to isntall
 You must have installed Python 3 (recomended 3.12)
 then execute the following comands:
@@ -20,7 +20,7 @@ It is recomendet to try each tool that don't cause any issue, and to update them
 
 ## Usage
 ```
-usage: script2_tabulat.py [-h] [-i IP] [-d DOMAIN] [-lI LIST_IP] [-lD LIST_DOMAIN] [-r] [-v] [-a] [-c] [--threads THREADS]
+usage: kudo.py [-h] [-i IP] [-d DOMAIN] [-lI LIST_IP] [-lD LIST_DOMAIN] [-r] [-v] [-a] [-c] [--threads THREADS]
 
 Recon & Scan automated script tool
 
@@ -41,13 +41,13 @@ options:
 
 ## Running 
 ### Single domain
-``python3 script -d domini.com``
+``python3 kudo.py -d domini.com``
 ### Single IP
-``python3 script -i 0.0.0.0``
+``python3 kudo.py -i 0.0.0.0``
 ### Multiple domain
-``python3 script -lD domini_list.txtn``
+``python3 kudo.py -lD domini_list.txtn``
 ### Multiple IPs
-``python3 script -lI IPs_list.txt``
+``python3 kudo.py -lI IPs_list.txt``
 
 ## APIs 
 You can vinculate diferents APIs to the tools, theHarvester or wpscan. 
