@@ -10,8 +10,3 @@ You have the flexibility to add your own wordlists or directories containing wor
 This allows you to customize the tool in the `config.py` document.
 
 
-
-
-### Credit
-The wordlists have been obtained from the kali distribution and repositore from maverkNerd/wordlists
-https://github.com/maverickNerd/wordlists
