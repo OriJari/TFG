@@ -3,6 +3,8 @@ import subprocess
 import argparse
 import logging
 import re
+import time
+
 import openpyxl
 import datetime
 import ipaddress
@@ -101,21 +103,21 @@ def exec_dmitry(target):
     logger.info(result_dmirty)
     print(f"[·] Dmitry for {target} ended.")
 
-def exec_harvester(target):
+def exec_harvester(target, name_file_target):
     print(f"[·] theHarvester for {target} started.")
-    result_harvester = execute_order_66(CommandEnumDef.HARVESTER.format(target, target))
+    result_harvester = execute_order_66(CommandEnumDef.HARVESTER.format(target, name_file_target))
     logger.info(result_harvester)
-    with open(f'{SAVES}harvester_{target}.json', 'r') as file:
+    with open(f'{SAVES}{name_file_target}_harvester.json', 'r') as file:
         output = json.load(file)
-    save_info("harvester", output, target)
+    save_info("harvester", output, name_file_target)
     print(f"[·] theHarvester for {target} ended.")
 
-def exec_subfinder(target,flags):
+def exec_subfinder(target,flags, name_file_target):
     print(f"[·] subfinder for {target} started.")
     if flags.cautious:
-        result_subfinder = execute_order_66(CommandEnumCau.SUBFINDER.format(target, target))
+        result_subfinder = execute_order_66(CommandEnumCau.SUBFINDER.format(target, name_file_target))
     else:
-        result_subfinder = execute_order_66(CommandEnumDef.SUBFINDER.format(target, target))
+        result_subfinder = execute_order_66(CommandEnumDef.SUBFINDER.format(target, name_file_target))
     logger.info(result_subfinder)
     print(f"[·] subfinder for {target} ended.")
 
@@ -135,48 +137,55 @@ def exec_dnsx(target,flags):
 
 def exec_nmap(target, flags):
     print(f"[·] NMAP for {target} started.")
-    if flags.aggressive:
-        execute_order_66(CommandEnumAgg.NMAPLIST.format(f"{SAVES}total_ips_{target}.txt",target))
-    elif flags.cautious:
-        execute_order_66(CommandEnumCau.NMAPLIST.format(f"{SAVES}total_ips_{target}.txt",target))
-    else:
-        execute_order_66(CommandEnumDef.NMAPLIST.format(f"{SAVES}total_ips_{target}.txt",target))
-
-    with open(f"results/temp/nmap_{target}.txt", 'r') as file:
+    if flags.domain or flags.list_Domain:
+        if flags.aggressive:
+            execute_order_66(CommandEnumAgg.NMAPLIST.format(f"{SAVES}total_ips_{target}.txt",target))
+        elif flags.cautious:
+            execute_order_66(CommandEnumCau.NMAPLIST.format(f"{SAVES}total_ips_{target}.txt",target))
+        else:
+            execute_order_66(CommandEnumDef.NMAPLIST.format(f"{SAVES}total_ips_{target}.txt",target))
+    elif flags.ip or flags.list_Ip:
+        if flags.aggressive:
+            execute_order_66(CommandEnumAgg.NMAP.format(target,target))
+        elif flags.cautious:
+            execute_order_66(CommandEnumCau.NMAP.format(target,target))
+        else:
+            execute_order_66(CommandEnumDef.NMAP.format(target,target))
+    with open(f"results/temp/{target}_nmap.txt", 'r') as file:
         content = file.read()
     logger.info(content)
     print(f"[·] NMAP for {target} ended.")
 
-def exec_ferox(target,flags):
+def exec_ferox(target,name_file_target):
     logger.info(f"[·] Feroxbuster for {target} started.")
-    result_ferox = execute_order_66(CommandEnumDef.FEROXBUSTER.format(target,target))
+    result_ferox = execute_order_66(CommandEnumDef.FEROXBUSTER.format(target,name_file_target))
     logger.info(result_ferox)
     logger.info(f"[·] Feroxbuster for {target} ended.")
 
-def exec_gobuster(target):
+def exec_gobuster(target, name_file_target):
     logger.info(f"[·] Gobuster DNS for {target} starterd.")
-    result_gobuster_dns = execute_order_66(CommandEnumDef.GOBUSTERDNS.format(target,target))
+    result_gobuster_dns = execute_order_66(CommandEnumDef.GOBUSTERDNS.format(target,name_file_target))
     logger.info(result_gobuster_dns)
     logger.info(f"[·] Gobuster DNS for {target} ended.")
 
-def exec_waf(target):
+def exec_waf(target, name_file_target):
     logger.info(f"[·] Waffw00f for {target} started.")
-    result_waf = execute_order_66(CommandEnumDef.WAF.format(target,target))
+    result_waf = execute_order_66(CommandEnumDef.WAF.format(target,name_file_target))
     logger.info(result_waf)
     logger.info(f"[·] Waffw00f for {target} started.")
-def exec_wpscan(target, flags):
+def exec_wpscan(target, flags, name_file_target):
     logger.info(f"[·] WPscan for {target} started.")
     if flags.aggressive:
-        execute_order_66(CommandEnumAgg.WPSACN.format(target,target))
-        execute_order_66(CommandEnumAgg.WPSACNPRINT.format(target, target))
+        execute_order_66(CommandEnumAgg.WPSACN.format(target,name_file_target))
+        execute_order_66(CommandEnumAgg.WPSACNPRINT.format(target, name_file_target))
     elif flags.cautious:
-        execute_order_66(CommandEnumCau.WPSACN.format(target,target))
-        execute_order_66(CommandEnumCau.WPSACNPRINT.format(target, target))
+        execute_order_66(CommandEnumCau.WPSACN.format(target,name_file_target))
+        execute_order_66(CommandEnumCau.WPSACNPRINT.format(target, name_file_target))
     else:
-        execute_order_66(CommandEnumDef.WPSACN.format(target,target))
-        execute_order_66(CommandEnumDef.WPSACNPRINT.format(target, target))
+        execute_order_66(CommandEnumDef.WPSACN.format(target,name_file_target))
+        execute_order_66(CommandEnumDef.WPSACNPRINT.format(target, name_file_target))
 
-    with open(f"results/temp/wpscan_{target}.txt", 'r') as file:
+    with open(f"results/temp/{name_file_target}_wpscan.txt", 'r') as file:
         content = file.read()
     logger.info(content)
     logger.info(f"[·] WPscan for {target} ended.")
@@ -187,9 +196,9 @@ def work_domini(targets, flags):
 
             print(f"[+] OSINT and Recon for {target} started.")
             exec_dmitry(target)
-            exec_harvester(target)
-            exec_subfinder(target,flags)
-            exec_gobuster(target)
+            exec_harvester(target, target)
+            exec_subfinder(target,flags, target)
+            exec_gobuster(target, target)
 
             merge_unique_subdomain(f"{SAVES}{target}_subfinder_subdomain.txt",f"{SAVES}{target}_gobuster_dns.txt", f'{SAVES}{target}_total_subdomains.txt')
             dnsx_break = False
@@ -205,39 +214,57 @@ def work_domini(targets, flags):
                 os.system(f"cp {SAVES}{target}_harvester_ips.txt {SAVES}{target}_total_ips.txt")
 
             exec_nmap(target, flags)
-            exec_ferox(target,flags)
-            exec_waf(target)
-            exec_wpscan(target,flags)
+            exec_ferox(target, target)
+            exec_waf(target, target)
+            exec_wpscan(target, flags, target)
 
             logger.info(f"[+] OSINT and Recon for {target} completed.")
         else:
             logger.error(f"[-] Domain {target} not valid or not reachable")
 
 def scan_recon_ip(target, flags):
+    global domain_target
+    time.sleep(0.5)
     exec_dmitry(target)
-    exec_harvester(target)
-    exec_subfinder(target, flags)
-    exec_gobuster(target)
-
-    merge_unique_subdomain(f"{SAVES}subfinder_subdomain_{target}.txt", f"{SAVES}gobuster_dns_{target}.txt",
-                           f'{SAVES}total_subdomains{target}.txt')
-    dnsx_break = False
-    try:
-        exec_dnsx(target, flags)
-    except:
-        logger.error("[-] DNSX failed")
-        dnsx_break = True
-
-    if not dnsx_break:
-        merge_unique_ips(f'{SAVES}harvester_{target}_ips.txt', f'{SAVES}dnsx2_subdomains_{target}.txt',
-                         f'{SAVES}total_ips_{target}.txt')
-    else:
-        os.system(f"cp {SAVES}harvester_{target}_ips.txt {SAVES}total_ips_{target}.txt")
-
     exec_nmap(target, flags)
-    exec_ferox(target, flags)
-    exec_waf(target)
-    exec_wpscan(target, flags)
+
+
+    domain_target = execute_order_66(f"echo {target} | dnsx -silent -resp-only -ptr ").strip()
+    if domain_target == "":
+        dnsx_worked = False
+        logger.error(f"[-] DNSX couldn't resolve {target} ")
+    else:
+        dnsx_worked = True
+        execute_order_66(f"echo {target} | dnsx -silent -re -ptr -o {SAVES}{target}_dnsx_resolve_domain").strip()
+
+    if dnsx_worked:
+        if validate_domain(domain_target):
+            exec_harvester(domain_target,target)
+            exec_subfinder(domain_target,flags,target)
+            exec_gobuster(domain_target, target)
+
+            #just to see what finds, for the rest of the code of recon ip is not critical
+            merge_unique_subdomain(f"{SAVES}{target}_subfinder_subdomain.txt", f"{SAVES}{target}_gobuster_dns.txt",
+                                   f'{SAVES}{target}_total_subdomains.txt')
+            dnsx_break = False
+            try:
+                exec_dnsx(target, flags)
+            except:
+                logger.error("[-] DNSX failed")
+                dnsx_break = True
+
+            if not dnsx_break:
+                merge_unique_ips(f'{SAVES}{target}_harvester_ips.txt', f'{SAVES}{target}_dnsx2_subdomains.txt',
+                                 f'{SAVES}{target}_total_ips.txt')
+            else:
+                os.system(f"cp {SAVES}{target}_harvester_ips.txt {SAVES}{target}_total_ips.txt")
+
+            exec_waf(domain_target, target)
+            exec_wpscan(domain_target, flags, target)
+
+
+    else:
+        exec_gobuster(target,target)
 
 def work_ips(targets, flags):
     for target in targets:
@@ -271,6 +298,15 @@ def make_excel(flags):
     output_file = f"results/{datetime.datetime.now()}_OSINT_tool_info_{flags.domain}.xlsx"
     results_workbook.save(output_file)
 
+def set_columns_width(ws):
+    for col in ws.columns:
+        max_length = 0
+        for cell in col:
+            if cell.value:
+                max_length = max(max_length, len(str(cell.value)))
+        adjusted_width = (max_length + 2) * 1.2
+        ws.column_dimensions[col[0].column_letter].width = adjusted_width
+
 def recon(flags):
     if flags.domain:
         targets = [flags.domain]
@@ -298,30 +334,121 @@ def recon(flags):
         logger.error("[-] No target specified. Use -i , -d , -lI or -lD to specify the IP(s) or the Domain(s).")
         return
 
+def exec_nuclei(target,flags):
+    logger.info(f"[·] Nuclei for {target} starterd.")
+    if not flags.vuln_scan and not flags.recon: # no flags, default
+        result_nuclei = execute_order_66(CommandEnumDef.NUCLEI.format(f"{SAVES}{target}_total_subdomains.txt", target))
+    elif not flags.recon: # -vuln_scan, only
+        result_nuclei = execute_order_66(CommandEnumDef.NUCLEIUNIC.format(target, target))
+    else: # -recon i -vuln_scan, default
+        result_nuclei = execute_order_66(CommandEnumDef.NUCLEI.format(f"{SAVES}{target}_total_subdomains.txt", target))
+
+    logger.info(result_nuclei)
+    logger.info(f"[·] Gobuster DNS for {target} ended.")
+
+def exec_wpscan_vuln(target, flags, name_file_target):
+    logger.info(f"[·] WPscan for {target} started.")
+    if flags.aggressive:
+        execute_order_66(CommandEnumAgg.WPSCANVULN.format(target,name_file_target))
+        execute_order_66(CommandEnumAgg.WPSCANVULNPRINT.format(target, name_file_target))
+    elif flags.cautious:
+        execute_order_66(CommandEnumCau.WPSCANVULN.format(target,name_file_target))
+        execute_order_66(CommandEnumCau.WPSCANVULNPRINT.format(target, name_file_target))
+    else:
+        execute_order_66(CommandEnumDef.WPSCANVULN.format(target,name_file_target))
+        execute_order_66(CommandEnumDef.WPSCANVULNPRINT.format(target, name_file_target))
+
+    with open(f"results/temp/{name_file_target}_wpscanvuln.txt", 'r') as file:
+        content = file.read()
+    logger.info(content)
+    logger.info(f"[·] WPscan for {target} ended.")
+
+
+def vuln_domini(targets, flags):
+    for target in targets:
+        if validate_domain(target):
+
+            print(f"[+] Vulnerability sacn for {target} started.")
+
+            exec_nuclei(target, flags)
+            exec_wpscan_vuln(target,flags,target)
+
+
+            logger.info(f"[+] Vulnerability sacn {target} completed.")
+        else:
+            logger.error(f"[-] Domain {target} not valid or not reachable")
+
+
+def vuln_ip(targets, flags):
+    for target in targets:
+        if validate_domain(target):
+
+            print(f"[+] Vulnerability sacn for {target} started.")
+
+            exec_nuclei(target, flags)
+            domain_target = execute_order_66(f"echo {target} | dnsx -silent -resp-only -ptr ").strip()
+            if domain_target == "":
+                dnsx_worked = False
+                logger.error(f"[-] DNSX couldn't resolve {target} ")
+            else:
+                dnsx_worked = True
+                execute_order_66(
+                    f"echo {target} | dnsx -silent -re -ptr -o {SAVES}{target}_dnsx_resolve_domain").strip()
+
+            if dnsx_worked:
+                exec_wpscan_vuln(target, flags, target)
+
+
+            logger.info(f"[+] Vulnerability sacn {target} completed.")
+        else:
+            logger.error(f"[-] Domain {target} not valid or not reachable")
+
+
+def vuln(flags):
+    if flags.domain:
+        targets = [flags.domain]
+        vuln_domini(targets, flags)
+    elif flags.list_Domain:
+        try:
+            with open(flags.list_Domain, 'r') as file:
+                targets = [line.strip() for line in file.readlines() if line.strip()]
+                vuln_domini(targets, flags)
+        except FileNotFoundError:
+            logger.error(f"[-] File not found: {flags.list_Ip or flags.list_Domain}")
+            return
+    elif flags.ip:
+        targets = [flags.ip]
+        vuln_ip(targets, flags)
+    elif flags.list_Ip:
+        try:
+            with open(flags.list_Ip, 'r') as file:
+                targets = [line.strip() for line in file.readlines() if line.strip()]
+                vuln_ip(targets, flags)
+        except FileNotFoundError:
+            logger.error(f"[-] File not found: {flags.list_Ip or flags.list_Domain}")
+            return
+    else:
+        logger.error("[-] No target specified. Use -i , -d , -lI or -lD to specify the IP(s) or the Domain(s).")
+        return
+
 def main(flags):
     os.popen("rm -rf results/temp/*")
 
     if not flags.vuln_scan and not flags.recon: # no flags, default
         recon(flags)
+        vuln(flags)
     elif not flags.recon: # -vuln_scan, only
-        print("vuln scan")
+        vuln(flags)
     elif not flags.vuln_scan: # -recon, only
         recon(flags)
     else: # -recon i -vuln_scan, default
         recon(flags)
+        vuln(flags)
 
 
 
     #os.popen("rm -rf results/temp/*")
 
-def set_columns_width(ws):
-    for col in ws.columns:
-        max_length = 0
-        for cell in col:
-            if cell.value:
-                max_length = max(max_length, len(str(cell.value)))
-        adjusted_width = (max_length + 2) * 1.2
-        ws.column_dimensions[col[0].column_letter].width = adjusted_width
 
 
 if __name__ == "__main__":

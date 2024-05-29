@@ -38,6 +38,7 @@ def filter_domains(text):
 
 # función principal que llama a las herramientas de OSINT y recon
 def main(flags):
+
     logger = logging.getLogger()
     if flags.domain:
         targets = [flags.domain]

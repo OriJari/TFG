@@ -17,13 +17,10 @@ Welcome to the Tools Directory! This directory is designed to provide users with
 
 Below is the list of tools and their corresponding usage documentation files:
 
-- `altdns_usage.txt` - Usage instructions for AltDNS.
 - `dmitry_usage.txt` - Usage instructions for Dmitry.
 - `dnsx_usage.txt` - Usage instructions for DNSx.
-- `ffuf_usage.txt` - Usage instructions for FFUF.
 - `feroxbuster_usage.txt` - Usage instructions for Feroxbuster.
 - `gobuster_usage.txt` - General usage instructions for Gobuster.
-- `gobuster_dir_usage.txt` - Directory brute-forcing with Gobuster.
 - `gobuster_dns_usage.txt` - DNS brute-forcing with Gobuster.
 - `nmap_usage.txt` - Usage instructions for Nmap.
 - `nuclei_usage.txt` - Usage instructions for Nuclei.
