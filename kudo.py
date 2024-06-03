@@ -1,5 +1,4 @@
 import os
-import subprocess
 import argparse
 import logging
 import re
@@ -20,7 +19,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # globals
 logger = logging.getLogger()
 SAVES = "results/temp/"
-
 
 def filter_ips(text):
     ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
@@ -287,26 +285,6 @@ def work_ips(targets, flags):
             else:
                 logger.error(f"[-] IP {target} not valid or not reachable")
 
-def make_excel(flags):
-    results_workbook = openpyxl.Workbook()
-
-    ws_single_model = results_workbook.create_sheet(title="Dummy result")
-    ws_single_model.append(['DNS', 'IPS', 'mails', 'domains', 'subdomains'])
-
-    set_columns_width(ws_single_model)
-
-    output_file = f"results/{datetime.datetime.now()}_OSINT_tool_info_{flags.domain}.xlsx"
-    results_workbook.save(output_file)
-
-def set_columns_width(ws):
-    for col in ws.columns:
-        max_length = 0
-        for cell in col:
-            if cell.value:
-                max_length = max(max_length, len(str(cell.value)))
-        adjusted_width = (max_length + 2) * 1.2
-        ws.column_dimensions[col[0].column_letter].width = adjusted_width
-
 def recon(flags):
     if flags.domain:
         targets = [flags.domain]
@@ -363,7 +341,6 @@ def exec_wpscan_vuln(target, flags, name_file_target):
     logger.info(content)
     logger.info(f"[·] WPscan for {target} ended.")
 
-
 def vuln_domini(targets, flags):
     for target in targets:
         if validate_domain(target):
@@ -378,31 +355,44 @@ def vuln_domini(targets, flags):
         else:
             logger.error(f"[-] Domain {target} not valid or not reachable")
 
+def vuln_scan_ip(target,flags):
+        print(f"[+] Vulnerability sacn for {target} started.")
+
+        exec_nuclei(target, flags)
+        domain_target = execute_order_66(f"echo {target} | dnsx -silent -resp-only -ptr ").strip()
+        if domain_target == "":
+            dnsx_worked = False
+            logger.error(f"[-] DNSX couldn't resolve {target} ")
+        else:
+            dnsx_worked = True
+            execute_order_66(
+                f"echo {target} | dnsx -silent -re -ptr -o {SAVES}{target}_dnsx_resolve_domain").strip()
+
+        if dnsx_worked:
+            exec_wpscan_vuln(target, flags, target)
+
+        logger.info(f"[+] Vulnerability sacn {target} completed.")
 
 def vuln_ip(targets, flags):
     for target in targets:
-        if validate_domain(target):
+        if '/' in target:
+            ip_range = expand_ip_range(target)
+            for ip in ip_range:
+                if validate_ip(ip):
+                    print(f"[+] OSINT and Recon for {ip} started.")
+                    vuln_scan_ip(ip, flags)
+                    print(f"[+] OSINT and Recon for {ip} completed.")
 
-            print(f"[+] Vulnerability sacn for {target} started.")
-
-            exec_nuclei(target, flags)
-            domain_target = execute_order_66(f"echo {target} | dnsx -silent -resp-only -ptr ").strip()
-            if domain_target == "":
-                dnsx_worked = False
-                logger.error(f"[-] DNSX couldn't resolve {target} ")
-            else:
-                dnsx_worked = True
-                execute_order_66(
-                    f"echo {target} | dnsx -silent -re -ptr -o {SAVES}{target}_dnsx_resolve_domain").strip()
-
-            if dnsx_worked:
-                exec_wpscan_vuln(target, flags, target)
-
-
-            logger.info(f"[+] Vulnerability sacn {target} completed.")
+                else:
+                    logger.error(f"[-] IP {ip} not valid or not reachable")
         else:
-            logger.error(f"[-] Domain {target} not valid or not reachable")
+            if validate_ip(target):
+                print(f"[+] OSINT and Recon for {target} started.")
+                vuln_scan_ip(target, flags)
+                print(f"[+] OSINT and Recon for {target} completed.")
 
+            else:
+                logger.error(f"[-] IP {target} not valid or not reachable")
 
 def vuln(flags):
     if flags.domain:
@@ -431,8 +421,28 @@ def vuln(flags):
         logger.error("[-] No target specified. Use -i , -d , -lI or -lD to specify the IP(s) or the Domain(s).")
         return
 
+def make_excel(flags):
+    results_workbook = openpyxl.Workbook()
+
+    ws_single_model = results_workbook.create_sheet(title="Dummy result")
+    ws_single_model.append(['DNS', 'IPS', 'mails', 'domains', 'subdomains'])
+
+    set_columns_width(ws_single_model)
+
+    output_file = f"results/{datetime.datetime.now()}_OSINT_tool_info_{flags.domain}.xlsx"
+    results_workbook.save(output_file)
+
+def set_columns_width(ws):
+    for col in ws.columns:
+        max_length = 0
+        for cell in col:
+            if cell.value:
+                max_length = max(max_length, len(str(cell.value)))
+        adjusted_width = (max_length + 2) * 1.2
+        ws.column_dimensions[col[0].column_letter].width = adjusted_width
+
 def main(flags):
-    os.popen("rm -rf results/temp/*")
+    #os.popen("rm -rf results/temp/*")
 
     if not flags.vuln_scan and not flags.recon: # no flags, default
         recon(flags)
