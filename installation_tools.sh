@@ -13,3 +13,4 @@ programs=(
 
 sudo apt install "${programs[@]}" -y
 
+mkdir -p results/temp/

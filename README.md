@@ -14,6 +14,12 @@ then execute the following comands:
 
 ```sudo ./installation_tools.sh ```
 
+It is recomendable to create a venv, at the directory of the project:
+
+```python -m virtualenv venv```
+
+``./venv/bin/activate``
+
 ```pip install -r requirements.txt```
 ### Recomendation
 It is recomendet to try each tool that don't cause any issue, and to update them.
