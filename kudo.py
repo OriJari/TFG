@@ -3,7 +3,6 @@ import argparse
 import logging
 import re
 import time
-
 import openpyxl
 import datetime
 import ipaddress
@@ -122,14 +121,14 @@ def exec_subfinder(target,flags, name_file_target):
 def exec_dnsx(target,flags):
     print(f"[·] DNSX for {target} started.")
     if flags.aggresive:
-        result_dnsx = execute_order_66(CommandEnumAgg.DNSX.format(f"{SAVES}total_subdomains{target}.txt", target))
-        execute_order_66(CommandEnumAgg.DNSX2.format(f"{SAVES}total_subdomains{target}.txt", target))
+        result_dnsx = execute_order_66(CommandEnumAgg.DNSX.format(f"{SAVES}{target}_total_subdomains{target}.txt", target))
+        execute_order_66(CommandEnumAgg.DNSX2.format(f"{SAVES}{target}_total_subdomains{target}.txt", target))
     elif flags.cautious:
-        result_dnsx = execute_order_66(CommandEnumCau.DNSX.format(f"{SAVES}total_subdomains{target}.txt", target))
-        execute_order_66(CommandEnumCau.DNSX2.format(f"{SAVES}total_subdomains{target}.txt", target))
+        result_dnsx = execute_order_66(CommandEnumCau.DNSX.format(f"{SAVES}{target}_total_subdomains{target}.txt", target))
+        execute_order_66(CommandEnumCau.DNSX2.format(f"{SAVES}{target}_total_subdomains{target}.txt", target))
     else:
-        result_dnsx = execute_order_66(CommandEnumDef.DNSX.format(f"{SAVES}total_subdomains{target}.txt", target))
-        execute_order_66(CommandEnumDef.DNSX2.format(f"{SAVES}total_subdomains{target}.txt", target))
+        result_dnsx = execute_order_66(CommandEnumDef.DNSX.format(f"{SAVES}{target}_total_subdomains{target}.txt", target))
+        execute_order_66(CommandEnumDef.DNSX2.format(f"{SAVES}{target}_total_subdomains{target}.txt", target))
     logger.info(result_dnsx)
     print(f"[·] DNSX for {target} ended.")
 
@@ -137,11 +136,11 @@ def exec_nmap(target, flags):
     print(f"[·] NMAP for {target} started.")
     if flags.domain or flags.list_Domain:
         if flags.aggressive:
-            execute_order_66(CommandEnumAgg.NMAPLIST.format(f"{SAVES}total_ips_{target}.txt",target))
+            execute_order_66(CommandEnumAgg.NMAPLIST.format(f"{SAVES}{target}_total_ips.txt",target))
         elif flags.cautious:
-            execute_order_66(CommandEnumCau.NMAPLIST.format(f"{SAVES}total_ips_{target}.txt",target))
+            execute_order_66(CommandEnumCau.NMAPLIST.format(f"{SAVES}{target}_total_ips.txt",target))
         else:
-            execute_order_66(CommandEnumDef.NMAPLIST.format(f"{SAVES}total_ips_{target}.txt",target))
+            execute_order_66(CommandEnumDef.NMAPLIST.format(f"{SAVES}{target}_total_ips.txt",target))
     elif flags.ip or flags.list_Ip:
         if flags.aggressive:
             execute_order_66(CommandEnumAgg.NMAP.format(target,target))
@@ -171,20 +170,26 @@ def exec_waf(target, name_file_target):
     result_waf = execute_order_66(CommandEnumDef.WAF.format(target,name_file_target))
     logger.info(result_waf)
     logger.info(f"[·] Waffw00f for {target} started.")
-def exec_wpscan(target, flags, name_file_target):
-    logger.info(f"[·] WPscan for {target} started.")
-    if flags.aggressive:
-        execute_order_66(CommandEnumAgg.WPSACN.format(target,name_file_target))
-        execute_order_66(CommandEnumAgg.WPSACNPRINT.format(target, name_file_target))
-    elif flags.cautious:
-        execute_order_66(CommandEnumCau.WPSACN.format(target,name_file_target))
-        execute_order_66(CommandEnumCau.WPSACNPRINT.format(target, name_file_target))
-    else:
-        execute_order_66(CommandEnumDef.WPSACN.format(target,name_file_target))
-        execute_order_66(CommandEnumDef.WPSACNPRINT.format(target, name_file_target))
 
-    with open(f"results/temp/{name_file_target}_wpscan.txt", 'r') as file:
-        content = file.read()
+def check_scan_aborted(file_path):
+    with open(file_path, 'r') as file:
+        data = json.load(file)
+    return "scan_aborted" in data
+def exec_wpscan(target, flags, name_file_target):
+    logger.info(f"[·] WPscan Vuln for {target} started.")
+    if flags.aggressive:
+        content =execute_order_66(CommandEnumAgg.WPSACN.format(target,name_file_target))
+        if check_scan_aborted(f"{SAVES}{target}_wpscan.json"):
+            content = execute_order_66(CommandEnumAgg.WPSACN.format(f"www.{target}", name_file_target))
+    elif flags.cautious:
+        content =execute_order_66(CommandEnumCau.WPSACN.format(target,name_file_target))
+        if check_scan_aborted(f"{SAVES}{target}_wpscan.json"):
+            content = execute_order_66(CommandEnumCau.WPSACN.format(f"www.{target}", name_file_target))
+    else:
+        content = execute_order_66(CommandEnumDef.WPSACN.format(target,name_file_target))
+        if check_scan_aborted(f"{SAVES}{target}_wpscan.json"):
+            content = execute_order_66(CommandEnumDef.WPSACN.format(f"www.{target}", name_file_target))
+
     logger.info(content)
     logger.info(f"[·] WPscan for {target} ended.")
 
@@ -212,7 +217,6 @@ def work_domini(targets, flags):
                 os.system(f"cp {SAVES}{target}_harvester_ips.txt {SAVES}{target}_total_ips.txt")
 
             exec_nmap(target, flags)
-            exec_ferox(target, target)
             exec_waf(target, target)
             exec_wpscan(target, flags, target)
 
@@ -325,21 +329,22 @@ def exec_nuclei(target,flags):
     logger.info(f"[·] Gobuster DNS for {target} ended.")
 
 def exec_wpscan_vuln(target, flags, name_file_target):
-    logger.info(f"[·] WPscan for {target} started.")
+    logger.info(f"[·] WPscan Vuln for {target} started.")
     if flags.aggressive:
-        execute_order_66(CommandEnumAgg.WPSCANVULN.format(target,name_file_target))
-        execute_order_66(CommandEnumAgg.WPSCANVULNPRINT.format(target, name_file_target))
+        content = execute_order_66(CommandEnumAgg.WPSCANVULN.format(target,name_file_target))
+        if check_scan_aborted(f"{SAVES}{target}_wpscanvuln.json"):
+            content = execute_order_66(CommandEnumAgg.WPSCANVULN.format(f"www.{target}", name_file_target))
     elif flags.cautious:
-        execute_order_66(CommandEnumCau.WPSCANVULN.format(target,name_file_target))
-        execute_order_66(CommandEnumCau.WPSCANVULNPRINT.format(target, name_file_target))
+        content = execute_order_66(CommandEnumCau.WPSCANVULN.format(target,name_file_target))
+        if check_scan_aborted(f"{SAVES}{target}_wpscanvuln.json"):
+            content = execute_order_66(CommandEnumCau.WPSCANVULN.format(f"www.{target}", name_file_target))
     else:
-        execute_order_66(CommandEnumDef.WPSCANVULN.format(target,name_file_target))
-        execute_order_66(CommandEnumDef.WPSCANVULNPRINT.format(target, name_file_target))
+        content = execute_order_66(CommandEnumDef.WPSCANVULN.format(target,name_file_target))
+        if check_scan_aborted(f"{SAVES}{target}_wpscanvuln.json"):
+            content = execute_order_66(CommandEnumDef.WPSCANVULN.format(f"www.{target}", name_file_target))
 
-    with open(f"results/temp/{name_file_target}_wpscanvuln.txt", 'r') as file:
-        content = file.read()
     logger.info(content)
-    logger.info(f"[·] WPscan for {target} ended.")
+    logger.info(f"[·] WPscan Vuln for {target} ended.")
 
 def vuln_domini(targets, flags):
     for target in targets:
@@ -421,16 +426,74 @@ def vuln(flags):
         logger.error("[-] No target specified. Use -i , -d , -lI or -lD to specify the IP(s) or the Domain(s).")
         return
 
-def make_excel(flags):
-    results_workbook = openpyxl.Workbook()
+def clean_txt(file_path):
+    with open(f"{SAVES}{file_path}", 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+    return [line.strip() for line in lines]
+def process_files_sheet_txt(results_workbook, file_path):
 
-    ws_single_model = results_workbook.create_sheet(title="Dummy result")
-    ws_single_model.append(['DNS', 'IPS', 'mails', 'domains', 'subdomains'])
+    base_name = os.path.basename(file_path)
+    parts = base_name.split('_')
+    tool_name = parts[1].split('.')[0]
+
+
+    ws_single_model = results_workbook.create_sheet(title=tool_name)
+    #ws_single_model.append([f"{tool_name} Output"])
 
     set_columns_width(ws_single_model)
 
-    output_file = f"results/{datetime.datetime.now()}_OSINT_tool_info_{flags.domain}.xlsx"
-    results_workbook.save(output_file)
+    data = clean_txt(file_path)
+
+    for row in data:
+        ws_single_model.append([row])
+
+
+def make_excel(targets, flags, is_ip):
+    for target in targets:
+        results_workbook = openpyxl.Workbook()
+        if is_ip:
+            if '/' in target:
+                ip_range = expand_ip_range(target)
+                for ip in ip_range:
+                    for files in os.walk(SAVES):
+                        for file in files:
+                            #txt
+                            if file.startswith(ip) and file.endswith(
+                                    ".txt") and "harvester" not in file and "dnsx2" not in file and "total" not in file:
+                                file_path = os.path.join(file)
+                                process_files_sheet_txt(results_workbook, file_path)
+                            #json
+                            elif file.startswith(ip) and file.endswith(".json"):
+                                file_path = os.path.join(file)
+
+        else:
+
+            for root, dirs, files in os.walk(SAVES):
+                for file in files:
+                    if file.startswith(target) and file.endswith(".txt") and "harvester" not in file and "dnsx2" not in file and "total" not in file :
+                        file_path = os.path.join(file)
+                        process_files_sheet_txt(results_workbook, file_path)
+
+            output_file = f"results/kudo_{target}_{datetime.datetime.now()}.xlsx"
+            results_workbook.save(output_file)
+
+def choose_excel(flags):
+    if flags.domain:
+        targets = [flags.domain]
+        make_excel(targets, flags, False)
+    elif flags.list_Domain:
+        with open(flags.list_Domain, 'r') as file:
+            targets = [line.strip() for line in file.readlines() if line.strip()]
+            make_excel(targets, flags, False)
+
+    elif flags.ip:
+        targets = [flags.ip]
+        make_excel(targets, flags, True)
+    elif flags.list_Ip:
+        with open(flags.list_Ip, 'r') as file:
+            targets = [line.strip() for line in file.readlines() if line.strip()]
+            make_excel(targets, flags, True)
+
 
 def set_columns_width(ws):
     for col in ws.columns:
@@ -442,19 +505,21 @@ def set_columns_width(ws):
         ws.column_dimensions[col[0].column_letter].width = adjusted_width
 
 def main(flags):
-    #os.popen("rm -rf results/temp/*")
+    os.popen("rm -rf results/temp/*")
+    prova = True
+    if prova:
+        if not flags.vuln_scan and not flags.recon: # no flags, default
+            recon(flags)
+            vuln(flags)
+        elif not flags.recon: # -vuln_scan, only
+            vuln(flags)
+        elif not flags.vuln_scan: # -recon, only
+            recon(flags)
+        else: # -recon i -vuln_scan, default
+            recon(flags)
+            vuln(flags)
 
-    if not flags.vuln_scan and not flags.recon: # no flags, default
-        recon(flags)
-        vuln(flags)
-    elif not flags.recon: # -vuln_scan, only
-        vuln(flags)
-    elif not flags.vuln_scan: # -recon, only
-        recon(flags)
-    else: # -recon i -vuln_scan, default
-        recon(flags)
-        vuln(flags)
-
+    choose_excel(flags)
 
 
     #os.popen("rm -rf results/temp/*")

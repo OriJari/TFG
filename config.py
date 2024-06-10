@@ -21,53 +21,45 @@ SAVES = "results/temp/"
 
 class CommandEnumDef(StrEnum):  #default call
     #recon
-    NMAPLIST = f"nmap -T4 -iL {{}} >> {SAVES}{{}}_nmap.txt" #nmap list for -domain input
-    NMAP = f"nmap -T4 {{}} >> {SAVES}{{}}_nmap.txt" #nmap unique for -ip input
+    NMAPLIST = f"nmap -T4 -iL {{}} -oN {SAVES}{{}}_nmap.txt" #nmap list for -domain input
+    NMAP = f"nmap -T4 {{}} -oN {SAVES}{{}}_nmap.txt" #nmap unique for -ip input
     DMIRTY = f"dmitry -i -w -n -s -e -o {SAVES}{{}}_dmitry.txt {{}}"
     SUBFINDER = f"subfinder -all -recursive -d {{}} -t 100  -o {SAVES}{{}}_subfinder_subdomain.txt"
     DNSX = f"dnsx -l {{}} -a -re -o {SAVES}{{}}_dnsx_subdomains.txt" #subdomain with ips, for output and proccessing data
     DNSX2 = f"dnsx -l {{}} -a -ro -o {SAVES}{{}}_dnsx2_subdomains.txt" #response only
-    FEROXBUSTER = f"feroxbuster -u {{}} -t 100 -d 2 --insecure --random-agent --thorough --force-recursion --json -o {SAVES}{{}}_feroxbuster.json -C 404,403,500 --extensions html,php,asp,aspx,jsp,js,css,png,jpg,gif,pdf,xml,txt,log,bak,old"
+    FEROXBUSTER = f"feroxbuster -u {{}} -t 100 -d 2 --insecure --random-agent --thorough --force-recursion --json -o {SAVES}{{}}_feroxbuster.json -C 404,403,500 "
     GOBUSTERDNS = f"gobuster dns -d {{}} -w {WORDLIST_SUBDOMAINS} -t 200 -o {SAVES}{{}}_gobuster_dns.txt"
     HARVESTER = f"theHarvester -d {{}} -b all -n -r -f {SAVES}{{}}_harvester.com"
     WAF = f"wafw00f https://{{}} -a -o {SAVES}{{}}_wafw00f.json -f json"
     WPSACN = f"wpscan --url https://{{}} --random-user-agent --enumerate t,p,u,m -t 100 -o {SAVES}{{}}_wpscan.json -f json" #with --enumerate at,ap searchs for all themes and all pluggins, more slow
-    WPSACNPRINT = f"wpscan --url https://{{}} --random-user-agent --enumerate p,t,u,m -t 100 -o {SAVES}{{}}_wpscan.txt" #just for print
 
     #vulns
     WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --api-token {API_WPSCAN} -t 100 -o {SAVES}{{}}_wpscanvuln.json -f json"
-    WPSCANVULNPRINT = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --api-token {API_WPSCAN} -t 100 -o {SAVES}{{}}_wpscanvuln.txt" #just for print
     NUCLEI = f"nuclei -u {{}}  -tags cve,security,misconfiguration -severity high,medium,critical -rate-limit 100 -timeout 5 -jsonl -o {SAVES}{{}}_nuclei.json"
-    NUCLEIUNIC = f"nuclei -u {{}}  -tags cve,security,misconfiguration -severity high,medium,critical -rate-limit 100 -timeout 5 -jsonl -o {SAVES}{{}}_nucleiunique.json"
+    NUCLEIUNIC = f"nuclei -u {{}}  -tags cve,security,misconfiguration -severity high,medium,critical -rate-limit 100 -timeout 5 -jsonl -o {SAVES}{{}}_nucleiunique.json" #if only vuln scan
 
 class CommandEnumAgg(StrEnum):  #aggresive comands
     #recon
-    NMAPLIST = f"nmap -T5 -iL {{}} >> {SAVES}{{}}_nmap.txt"
-    NMAP = f"nmap -T5 {{}} >> {SAVES}{{}}_nmap.txt"
+    NMAPLIST = f"nmap -T5 -iL {{}} -oN {SAVES}{{}}_nmap.txt"
+    NMAP = f"nmap -T5 {{}} -oN {SAVES}{{}}_nmap.txt"
     WPSACN = f"wpscan --url https://{{}} -t 100 --random-user-agent --enumerate p,t,u,m --detection-mode aggressive --plugins-detection aggressive --themes-detection aggressive --user-detection aggresive -o {SAVES}{{}}_wpscan.json -f json"
-    WPSACNPRINT = f"wpscan --url https://{{}} -t 100 --random-user-agent --enumerate p,t,u,m --detection-mode aggressive --plugins-detection aggressive --themes-detection aggressive --user-detection aggresive -o {SAVES}{{}}_wpscan.txt"
     DNSX = f"dnsx -l {{}} -a -re-retry 3 -o {SAVES}{{}}_dnsx_subdomains.txt"
     DNSX2 = f"dnsx -l {{}} -a -ro -retry 3 -o {SAVES}{{}}_dnsx2_subdomains.txt"
 
     #vulns
     WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --detection-mode aggressive  --api-token {API_WPSCAN} -t 100 -o {SAVES}{{}}_wpscanvuln.json -f json"
-    WPSCANVULNPRINT = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --detection-mode aggressive  --api-token {API_WPSCAN} -t 100 -o {SAVES}{{}}_wpscanvuln.txt"
-
 
 class CommandEnumCau(StrEnum):  #caution comands
     #recon
-    NMAPLIST = f"nmap -T2 -iL {{}} >> {SAVES}{{}}_nmap.txt"
-    NMAP = f"nmap -T2 {{}} >> {SAVES}{{}}_nmap.txt"
+    NMAPLIST = f"nmap -T2 -iL {{}} -oN {SAVES}{{}}_nmap.txt"
+    NMAP = f"nmap -T2 {{}} -oN {SAVES}{{}}_nmap.txt"
     SUBFINDER = f"subfinder -silent -recursive -d {{}} -t 10 -o {SAVES}{{}}_subfinder_subdomain.txt"
     DNSX = f"dnsx -l {{}} -a -re -rate-limit 5 -o {SAVES}{{}}_dnsx_subdomains.txt"
     DNSX2 = f"dnsx -l {{}} -a -ro -rate-limit 5 -o {SAVES}{{}}_dnsx2_subdomains.txt"
     WPSACN = f"wpscan --url https://{{}} -t 100 --random-user-agent --enumerate ap,at,u,m --detection-mode passive --plugins-detection passive --themes-detection passive --user-detection passive -o {SAVES}{{}}_wpscan.json -f json"
-    WPSACNPRINT = f"wpscan --url https://{{}} -t 100 --random-user-agent --enumerate ap,at,u,m --detection-mode passive --plugins-detection passive --themes-detection passive --user-detection passive -o {SAVES}{{}}_wpscan.txt"
 
     #vulns
     WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --detection-mode passive  --api-token {API_WPSCAN} -t 100 -o {SAVES}{{}}_wpscanvuln.json -f json"
-    WPSCANVULNPRINT = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --detection-mode passive  --api-token {API_WPSCAN} -t 100 -o {SAVES}{{}}_wpscanvuln.txt"
-
 
 #basic calls, they are here as a backup if you make any modification to the calls
 '''
