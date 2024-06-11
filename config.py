@@ -5,10 +5,9 @@ from strenum import StrEnum
 # Further down, comments include a copy so as not to lose them once you have customized them.
 
 #set your diferents wordlists here
-WORDLIST_DNS = "lists/amass/all.txt"
-WORDLIST_SUBDOMAINS = "lists/amass/subdomains-top1mil-110000.txt"
-WORDLIST_DIR = "lists/dirbuster/directory-list-2.3-medium.txt"
-WORDLIST_FUZZ =""
+WORDLIST_SUBDOMAINS = "lists/amass/subdomains-top1mil-5000.txt"
+WORDLIST_VHOST = "lists/dirb/common.txt"
+
 
 #set your api tokens here
 API_WPSCAN = "sIxe5FoNOPimo8LN3sbKErvzBr7Q7X29JDqVnYIcxVs" #add your api token, it's free, only with register at https://wpscan.com/
@@ -16,68 +15,85 @@ API_WPSCAN = "sIxe5FoNOPimo8LN3sbKErvzBr7Q7X29JDqVnYIcxVs" #add your api token, 
 #path to temporal files are saved
 SAVES = "results/temp/"
 
+#IMPORTANT!! If you customize the commands to your liking, which you are free to do,
+# be careful not to modify the save files, their names, and their paths,
+# otherwise the script will not be able to execute correctly.
+
 class CommandEnumDef(StrEnum):  #default call
-    NMAP = "nmap -T5 {}"
-    DMIRTY = "dmitry -i -w -n -s -e {}"
-    SUBFINDER = f"subfinder -all -d -t 100 {{}} -o {SAVES}subfinder_subdomain_{{}}.txt"
-    SUBFINDERECURSIVE = f'subfinder -all -recursive -d -t 100 {{}} -o {SAVES}subfinderecursive_subdomain_{{}}.txt'
-    DNSX = f'dnsx -l {{}} -a -resp -o {SAVES}dnsx_subdomains_{{}}.txt'
-    FEROXBUSTER = f"feroxbuster -u {{}} -t 200 -d 0 --insecure --thorough --force-recursion -o {SAVES}feroxbuster_{{}}.txt --extensions html,php,asp,aspx,jsp,js,css,png,jpg,gif,pdf,xml,txt,log,bak,old"
-    GOBUSTERDNS = f"gobuster dns -d {{}} -w {WORDLIST_DNS} -t 100 -o {SAVES}gobuster_dns_{{}}.txt"
-    GOBUSTERDIR = f"gobuster dir -u https://{{}} -w {WORDLIST_DIR} -x html,php,asp,aspx,jsp,js,css,png,jpg,gif,pdf,xml,txt,log,bak,old -t 100 -o {SAVES}gobuster_dir_{{}}.txt"
-    NSLOOKUP = "nslookup {}"
-    HARVESTER = f"theHarvester -d {{}} -b all -n -r >> {SAVES}harvester_{{}}.txt"
-    WAF = f"wafw00f https://{{}} -a -o {SAVES}wafw00f_{{}}.txt -f txt"
-    WPSACN = f"wpscan --url https://{{}} --random-user-agent --enumerate ap,at,u,m -t 100"
-    WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --api-token {API_WPSCAN}"
-    FFUF = f"ffuf -w {WORDLIST_SUBDOMAINS} -u https://{{}}/FUZZ  -mc 200 -t 100" #cal?
-    ALTDNS = f"altdns {{}} -w {WORDLIST_SUBDOMAINS} -r -n -e -d 8.8.8.8 -o {SAVES}altdns_alterated_{{}} -s {SAVES}altdns_resolved_{{}}.txt -t 50" #target ha de ser llista de subdominis cal?
+    #recon
+    NMAPLIST = f"nmap -T4 -iL {{}} -oN {SAVES}{{}}_nmap.txt" #nmap list for -domain input
+    NMAP = f"nmap -T4 {{}} -oN {SAVES}{{}}_nmap.txt" #nmap unique for -ip input
+    DMIRTY = f"dmitry -i -w -n -s -e -o {SAVES}{{}}_dmitry.txt {{}}"
+    SUBFINDER = f"subfinder -all -recursive -d {{}} -t 100  -o {SAVES}{{}}_subfinder_subdomain.txt"
+    DNSX = f"dnsx -l {{}} -a -re -o {SAVES}{{}}_dnsx_subdomains.txt" #subdomain with ips, for output and proccessing data
+    DNSX2 = f"dnsx -l {{}} -a -ro -o {SAVES}{{}}_dnsx2_subdomains.txt" #response only
+    GOBUSTERDNS = f"gobuster dns -d {{}} -w {WORDLIST_SUBDOMAINS} -t 200 -o {SAVES}{{}}_gobuster_dns.txt"
+    HARVESTER = f"theHarvester -d {{}} -b all -n -r -f {SAVES}{{}}_harvester.com"
+    WAF = f"wafw00f https://{{}} -a -o {SAVES}{{}}_wafw00f.txt"
+    WPSACN = f"wpscan --url https://{{}} --random-user-agent --enumerate t,p,u,m -t 100 -o {SAVES}{{}}_wpscan.txt -f cli" #with --enumerate at,ap searchs for all themes and all pluggins, more slow
 
-
+    #vulns
+    WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --api-token {API_WPSCAN} -t 100 -o {SAVES}{{}}_wpscanvuln.txt -f cli"
+    NUCLEI = f"nuclei -u {{}}  -tags cve,security,misconfiguration -severity high,medium,critical -rate-limit 100 -timeout 5 -o {SAVES}{{}}_nuclei.txt"
 
 class CommandEnumAgg(StrEnum):  #aggresive comands
-    NMAP = "nmap -Pn -sV -T5 {}"
-    WPSACN = f"wpscan --url https://{{}} -t 100 --random-user-agent --enumerate ap,at,u,m --detection-mode aggressive --plugins-detection aggressive --themes-detection aggressive --user-detection aggresive "
-    WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --detection-mode aggressive  --api-token {API_WPSCAN}"
+    #recon
+    NMAPLIST = f"nmap -T5 -iL {{}} -oN {SAVES}{{}}_nmap.txt"
+    NMAP = f"nmap -T5 {{}} -oN {SAVES}{{}}_nmap.txt"
+    WPSACN = f"wpscan --url https://{{}} -t 100 --random-user-agent --enumerate p,t,u,m --detection-mode aggressive --plugins-detection aggressive --themes-detection aggressive --user-detection aggresive -o {SAVES}{{}}_wpscan.txt -f cli"
+    DNSX = f"dnsx -l {{}} -a -re-retry 3 -o {SAVES}{{}}_dnsx_subdomains.txt"
+    DNSX2 = f"dnsx -l {{}} -a -ro -retry 3 -o {SAVES}{{}}_dnsx2_subdomains.txt"
+
+    #vulns
+    WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --detection-mode aggressive  --api-token {API_WPSCAN} -t 100 -o {SAVES}{{}}_wpscanvuln.txt -f cli"
 
 class CommandEnumCau(StrEnum):  #caution comands
-    NMAP = "nmap -Pn -sV -T2 {}"
-    FEROXBUSTER = f"feroxbuster -u {{}} -t 200 -d 0 --thorough --insecure --force-recursion -o {SAVES}feroxbuster_{{}}.txt --extensions html,php,asp,aspx,jsp,js,css,png,jpg,gif,pdf,xml,txt,log,bak,old --random-agent"
-    WPSACN = f"wpscan --url https://{{}} -t 100 --random-user-agent --enumerate ap,at,u,m --detection-mode passive --plugins-detection passive --themes-detection passive --user-detection passive "
-    WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --detection-mode passive  --api-token {API_WPSCAN}"
+    #recon
+    NMAPLIST = f"nmap -T2 -iL {{}} -oN {SAVES}{{}}_nmap.txt"
+    NMAP = f"nmap -T2 {{}} -oN {SAVES}{{}}_nmap.txt"
+    SUBFINDER = f"subfinder -silent -recursive -d {{}} -t 10 -o {SAVES}{{}}_subfinder_subdomain.txt"
+    DNSX = f"dnsx -l {{}} -a -re -rate-limit 5 -o {SAVES}{{}}_dnsx_subdomains.txt"
+    DNSX2 = f"dnsx -l {{}} -a -ro -rate-limit 5 -o {SAVES}{{}}_dnsx2_subdomains.txt"
+    WPSACN = f"wpscan --url https://{{}} -t 100 --random-user-agent --enumerate ap,at,u,m --detection-mode passive --plugins-detection passive --themes-detection passive --user-detection passive -o {SAVES}{{}}_wpscan.txt -f cli"
 
+    #vulns
+    WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --detection-mode passive  --api-token {API_WPSCAN} -t 100 -o {SAVES}{{}}_wpscanvuln.txt -f cli"
+
+#basic calls, they are here as a backup if you make any modification to the calls
 '''
 
 class CommandEnumDef(StrEnum):  #default call
-    NMAP = "nmap -Pn -p- -sV -A -T4 {}"
-    DMIRTY = "dmitry -i -w -n -s -e {}"
-    SUBFINDER = f"subfinder -all -d -t 100 {{}} -o {SAVES}subfinder_subdomain_{{}}.txt"
-    SUBFINDERECURSIVE = f'subfinder -all -recursive -d -t 100 {{}} -o {SAVES}subfinderecursive_subdomain_{{}}.txt'
-    DNSX = f'dnsx -l {{}} -a -resp -o {SAVES}dnsx_subdomains_{{}}.txt'
-    FEROXBUSTER = f"feroxbuster -u {{}} -t 200 -d 0 --insecure --thorough --force-recursion -o {SAVES}feroxbuster_{{}}.txt --extensions html,php,asp,aspx,jsp,js,css,png,jpg,gif,pdf,xml,txt,log,bak,old"
-    GOBUSTERDNS = f"gobuster dns -d {{}} -w {WORDLIST_DNS} -t 100 -o {SAVES}gobuster_dns_{{}}.txt"
-    GOBUSTERDIR = f"gobuster dir -u https://{{}} -w {WORDLIST_DIR} -x html,php,asp,aspx,jsp,js,css,png,jpg,gif,pdf,xml,txt,log,bak,old -t 100 -o {SAVES}gobuster_dir_{{}}.txt"
-    NSLOOKUP = "nslookup {}"
-    HARVESTER = f"theHarvester -d {{}} -b all -n -r >> {SAVES}harvester_{{}}.txt"
-    WAF = f"wafw00f https://{{}} -a -o {SAVES}wafw00f_{{}}.txt -f txt"
-    WPSACN = f"wpscan --url https://{{}} --random-user-agent --enumerate ap,at,u,m -t 100"
-    WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --api-token {API_WPSCAN}"
-    FFUF = f"ffuf -w {WORDLIST_SUBDOMAINS} -u https://{{}}/FUZZ  -mc 200 -t 100" #cal?
-    ALTDNS = f"altdns {{}} -w {WORDLIST_SUBDOMAINS} -r -n -e -d 8.8.8.8 -o {SAVES}altdns_alterated_{{}} -s {SAVES}altdns_resolved_{{}}.txt -t 50" #target ha de ser llista de subdominis cal?
-
-
+    NMAPLIST = f"nmap -T4 -iL {{}} >> {SAVES}_nmap_{{}}.txt"
+    NMAP = f"nmap -T4 {{}} >> {SAVES}_nmap_{{}}.txt"
+    DMIRTY = f"dmitry -i -w -n -s -e -o {SAVES}dmitry.txt {{}}"
+    SUBFINDER = f"subfinder -all -recursive -d {{}} -t 100  -o {SAVES}subfinder_subdomain_{{}}.txt"
+    DNSX = f'dnsx -l {{}} -a -re -o {SAVES}dnsx_subdomains_{{}}.txt'
+    DNSX2 = f'dnsx -l {{}} -a -ro -o {SAVES}dnsx2_subdomains_{{}}.txt'
+    GOBUSTERDNS = f"gobuster dns -d {{}} -w {WORDLIST_SUBDOMAINS} -t 200 -o {SAVES}gobuster_dns_{{}}.txt"
+    HARVESTER = f"theHarvester -d {{}} -b all -n -r -f {SAVES}harvester_{{}}.com"
+    WAF = f"wafw00f https://{{}} -a -o {SAVES}wafw00f_{{}} -f json"
+    WPSACN = f"wpscan --url https://{{}} --random-user-agent --enumerate ap,at,u,m -t 100 -o {SAVES}wpscan_{{}} -f json"
+    WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --api-token {API_WPSCAN} -t 100 -o {SAVES}wpscanvuln_{{}} -f json"
+    NUCLEI = f"nuclei -l {{}}  -tags cve,security,misconfiguration -severity high,medium,critical -rate-limit 100 -timeout 5 -jsonl -o {SAVES}nuclei_{{}}.json"
+    NUCLEIUNIC = f"nuclei -u {{}}  -tags cve,security,misconfiguration -severity high,medium,critical -rate-limit 100 -timeout 5 -jsonl -o {SAVES}nucleiunique_{{}}.json"
 
 class CommandEnumAgg(StrEnum):  #aggresive comands
-    NMAP = "nmap -Pn -sV -T5 {}"
-    WPSACN = f"wpscan --url https://{{}} -t 100 --random-user-agent --enumerate ap,at,u,m --detection-mode aggressive --plugins-detection aggressive --themes-detection aggressive --user-detection aggresive "
-    WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --detection-mode aggressive  --api-token {API_WPSCAN}"
+    NMAPLIST = f"nmap -T5 -iL {{}} >> {SAVES}_nmap_{{}}.txt"
+    NMAP = f"nmap -T5 {{}} >> {SAVES}_nmap_{{}}.txt"
+    WPSACN = f"wpscan --url https://{{}} -t 100 --random-user-agent --enumerate ap,at,u,m --detection-mode aggressive --plugins-detection aggressive --themes-detection aggressive --user-detection aggresive -o {SAVES}wpscan_{{}} -f json"
+    WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --detection-mode aggressive  --api-token {API_WPSCAN} -t 100 -o {SAVES}wpscanvuln_{{}} -f json"
+    DNSX = f"dnsx -l {{}} -a -re-retry 3 -o {SAVES}dnsx_subdomains_{{}}.txt"
+    DNSX2 = f"dnsx -l {{}} -a -ro -retry 3 -o {SAVES}dnsx_subdomains_{{}}.txt"
+
 
 class CommandEnumCau(StrEnum):  #caution comands
-    NMAP = "nmap -Pn -sV -T2 {}"
-    FEROXBUSTER = f"feroxbuster -u {{}} -t 200 -d 0 --thorough --insecure --force-recursion -o {SAVES}feroxbuster_{{}}.txt --extensions html,php,asp,aspx,jsp,js,css,png,jpg,gif,pdf,xml,txt,log,bak,old --random-agent"
-    WPSACN = f"wpscan --url https://{{}} -t 100 --random-user-agent --enumerate ap,at,u,m --detection-mode passive --plugins-detection passive --themes-detection passive --user-detection passive "
-    WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --detection-mode passive  --api-token {API_WPSCAN}"
-
+    NMAPLIST = "nmap -T2 -iL {}"
+    NMAP = "nmap -T2 {}"
+    WPSACN = f"wpscan --url https://{{}} -t 100 --random-user-agent --enumerate ap,at,u,m --detection-mode passive --plugins-detection passive --themes-detection passive --user-detection passive -o {SAVES}wpscan_{{}} -f json"
+    WPSCANVULN = f"wpscan --url https://{{}} --random-user-agent --enumerate vp,vt --detection-mode passive  --api-token {API_WPSCAN} -t 100 -o {SAVES}wpscanvuln_{{}} -f json"
+    SUBFINDER = f"subfinder -silent -recursive -d {{}} -t 10 -o {SAVES}subfinder_subdomain_{{}}.txt"
+    DNSX = f'dnsx -l {{}} -a -re -rate-limit 5 -o {SAVES}dnsx_subdomains_{{}}.txt'
+    DNSX2 = f'dnsx -l {{}} -a -ro -rate-limit 5 -o {SAVES}dnsx_subdomains_{{}}.txt'
 
 '''
 
