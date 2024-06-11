@@ -173,23 +173,24 @@ def exec_waf(target, name_file_target):
 
 def check_scan_aborted(file_path):
     with open(file_path, 'r') as file:
-        data = json.load(file)
+        data = file.readlines()
     return "scan_aborted" in data
 def exec_wpscan(target, flags, name_file_target):
     logger.info(f"[·] WPscan Vuln for {target} started.")
     if flags.aggressive:
         content =execute_order_66(CommandEnumAgg.WPSACN.format(target,name_file_target))
-        if check_scan_aborted(f"{SAVES}{target}_wpscan.json"):
+        if check_scan_aborted(f"{SAVES}{target}_wpscan.txt"):
             content = execute_order_66(CommandEnumAgg.WPSACN.format(f"www.{target}", name_file_target))
     elif flags.cautious:
         content =execute_order_66(CommandEnumCau.WPSACN.format(target,name_file_target))
-        if check_scan_aborted(f"{SAVES}{target}_wpscan.json"):
+        if check_scan_aborted(f"{SAVES}{target}_wpscan.txt"):
             content = execute_order_66(CommandEnumCau.WPSACN.format(f"www.{target}", name_file_target))
     else:
         content = execute_order_66(CommandEnumDef.WPSACN.format(target,name_file_target))
-        if check_scan_aborted(f"{SAVES}{target}_wpscan.json"):
+        if check_scan_aborted(f"{SAVES}{target}_wpscan.txt"):
             content = execute_order_66(CommandEnumDef.WPSACN.format(f"www.{target}", name_file_target))
-
+    with open(f"results/temp/{target}_wpscan.txt", 'r') as file:
+        content = file.read()
     logger.info(content)
     logger.info(f"[·] WPscan for {target} ended.")
 
@@ -321,7 +322,7 @@ def exec_nuclei(target,flags):
     if not flags.vuln_scan and not flags.recon: # no flags, default
         result_nuclei = execute_order_66(CommandEnumDef.NUCLEI.format(f"{SAVES}{target}_total_subdomains.txt", target))
     elif not flags.recon: # -vuln_scan, only
-        result_nuclei = execute_order_66(CommandEnumDef.NUCLEIUNIC.format(target, target))
+        result_nuclei = execute_order_66(CommandEnumDef.NUCLEI.format(target, target))
     else: # -recon i -vuln_scan, default
         result_nuclei = execute_order_66(CommandEnumDef.NUCLEI.format(f"{SAVES}{target}_total_subdomains.txt", target))
 
@@ -332,17 +333,18 @@ def exec_wpscan_vuln(target, flags, name_file_target):
     logger.info(f"[·] WPscan Vuln for {target} started.")
     if flags.aggressive:
         content = execute_order_66(CommandEnumAgg.WPSCANVULN.format(target,name_file_target))
-        if check_scan_aborted(f"{SAVES}{target}_wpscanvuln.json"):
+        if check_scan_aborted(f"{SAVES}{target}_wpscanvuln.txt"):
             content = execute_order_66(CommandEnumAgg.WPSCANVULN.format(f"www.{target}", name_file_target))
     elif flags.cautious:
         content = execute_order_66(CommandEnumCau.WPSCANVULN.format(target,name_file_target))
-        if check_scan_aborted(f"{SAVES}{target}_wpscanvuln.json"):
+        if check_scan_aborted(f"{SAVES}{target}_wpscanvuln.txt"):
             content = execute_order_66(CommandEnumCau.WPSCANVULN.format(f"www.{target}", name_file_target))
     else:
         content = execute_order_66(CommandEnumDef.WPSCANVULN.format(target,name_file_target))
-        if check_scan_aborted(f"{SAVES}{target}_wpscanvuln.json"):
+        if check_scan_aborted(f"{SAVES}{target}_wpscanvuln.txt"):
             content = execute_order_66(CommandEnumDef.WPSCANVULN.format(f"www.{target}", name_file_target))
-
+    with open(f"results/temp/{target}_wpscanvuln.txt", 'r') as file:
+        content = file.read()
     logger.info(content)
     logger.info(f"[·] WPscan Vuln for {target} ended.")
 
@@ -430,6 +432,15 @@ def clean_txt(file_path):
     with open(f"{SAVES}{file_path}", 'r', encoding='utf-8') as f:
         lines = f.readlines()
     return [line.strip() for line in lines]
+
+
+def remove_illegal_characters(value):
+    # Define un patrón de caracteres ilegales
+    illegal_characters_re = re.compile(r'[\x00-\x08\x0B\x0C\x0E-\x1F]')
+
+    if isinstance(value, str):
+        return illegal_characters_re.sub('', value)
+    return value
 def process_files_sheet_txt(results_workbook, file_path):
 
     base_name = os.path.basename(file_path)
@@ -443,10 +454,64 @@ def process_files_sheet_txt(results_workbook, file_path):
     set_columns_width(ws_single_model)
 
     data = clean_txt(file_path)
-
     for row in data:
-        ws_single_model.append([row])
+        cleaned_row = [remove_illegal_characters(row)]
+        try:
+            ws_single_model.append(cleaned_row)
+        except openpyxl.utils.exceptions.IllegalCharacterError as e:
+            print(f"Error: {e} en la línea: {cleaned_row}")
 
+    #for row in data:
+        #cleaned_row = [remove_illegal_characters(cell) for cell in row]
+        #ws_single_model.append(cleaned_row)
+        #try:
+           # ws_single_model.append([row])
+        #except openpyxl.utils.exceptions.IllegalCharacterError:
+            #logger.info(f"openpyxl.utils.exceptions.IllegalCharacterError {row}")
+
+def clean_json(file_path):
+    with open(file_path, 'r') as f:
+        content = f.read().strip()
+        if not content:
+            return None
+        data = json.loads(content)
+    return data
+
+
+def process_files_sheet_json(results_workbook, file_path):
+    base_name = os.path.basename(file_path)
+    parts = base_name.split('_')
+    tool_name = parts[1].split('.')[0]
+
+    ws_single_model = results_workbook.create_sheet(title=tool_name)
+    set_columns_width(ws_single_model)
+
+    data = clean_json(file_path)
+
+    if isinstance(data, dict):
+        list_values = [v for v in data.values() if isinstance(v, list)]
+        if list_values:
+            max_length = max(len(v) for v in list_values)
+        else:
+            max_length = 0
+        headers = list(data.keys())
+        ws_single_model.append(headers)
+
+        for i in range(max_length):
+            row = []
+            for key in headers:
+                if isinstance(data[key], list) and i < len(data[key]):
+                    value = data[key][i]
+                else:
+                    value = None
+
+                # Convertir valores a cadenas de texto si no son compatibles
+                if not isinstance(value, (str, int, float, bool, type(None))):
+                    value = str(value)
+
+                row.append(value)
+
+            ws_single_model.append(row)
 
 def make_excel(targets, flags, is_ip):
     for target in targets:
@@ -455,7 +520,7 @@ def make_excel(targets, flags, is_ip):
             if '/' in target:
                 ip_range = expand_ip_range(target)
                 for ip in ip_range:
-                    for files in os.walk(SAVES):
+                    for root, dirs, files in os.walk(SAVES):
                         for file in files:
                             #txt
                             if file.startswith(ip) and file.endswith(
@@ -464,7 +529,8 @@ def make_excel(targets, flags, is_ip):
                                 process_files_sheet_txt(results_workbook, file_path)
                             #json
                             elif file.startswith(ip) and file.endswith(".json"):
-                                file_path = os.path.join(file)
+                                file_path = os.path.join(root, file)
+                                process_files_sheet_json(results_workbook, file_path)
 
         else:
 
@@ -473,6 +539,9 @@ def make_excel(targets, flags, is_ip):
                     if file.startswith(target) and file.endswith(".txt") and "harvester" not in file and "dnsx2" not in file and "total" not in file :
                         file_path = os.path.join(file)
                         process_files_sheet_txt(results_workbook, file_path)
+                    elif file.startswith(target) and file.endswith(".json"):
+                        file_path = os.path.join(root, file)
+                        process_files_sheet_json(results_workbook, file_path)
 
             output_file = f"results/kudo_{target}_{datetime.datetime.now()}.xlsx"
             results_workbook.save(output_file)
@@ -505,7 +574,7 @@ def set_columns_width(ws):
         ws.column_dimensions[col[0].column_letter].width = adjusted_width
 
 def main(flags):
-    os.popen("rm -rf results/temp/*")
+    #os.popen("rm -rf results/temp/*")
     prova = True
     if prova:
         if not flags.vuln_scan and not flags.recon: # no flags, default
