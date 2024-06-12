@@ -26,7 +26,7 @@ It is recomendet to try each tool that don't cause any issue, and to update them
 
 ## Usage
 ```
-usage: kudo.py [-h] [-i IP] [-d DOMAIN] [-lI LIST_IP] [-lD LIST_DOMAIN] [-r] [-v] [-a] [-c] [--threads THREADS]
+usage: kudo.py [-h] [-i IP] [-d DOMAIN] [-lI LIST_IP] [-lD LIST_DOMAIN] [-r] [-v] [-a] [-c] 
 
 Recon & Scan automated script tool
 

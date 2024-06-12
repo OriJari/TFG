@@ -18,11 +18,27 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # globals
 logger = logging.getLogger()
 SAVES = "results/temp/"
+def welcome():
+    intro_message = """
+*******************************************************************
+ _  __         _       
+| |/ /   _  __| | ___  
+| ' / | | |/ _` |/ _ \ 
+| . \ |_| | (_| | (_) |
+|_|\_\__,_|\__,_|\___/ 
+                                       
+ Kudo 1.0                                          
+ Coded by OriJari                              
+ https://github.com/OriJari                              
+                                      
+*******************************************************************
+usage: kudo.py [-h] [-i IP] [-d DOMAIN] [-lI LIST_IP] [-lD LIST_DOMAIN] [-r] [-v] [-a] [-c]
 
-def filter_ips(text):
-    ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
-    return re.findall(ip_pattern, text)
+Kudo is for recognition and scanning, services, technologies and vulnerabilities, automated.
 
+*******************************************************************
+    """
+    print(intro_message)
 def validate_ip(ip):
     try:
         ipaddress.ip_address(ip)
@@ -36,10 +52,6 @@ def validate_domain(domain):
         return True
     except ValueError:
         return False
-
-def filter_domains(text):
-    domain_pattern = r'\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}\b'
-    return re.findall(domain_pattern, text)
 
 def expand_ip_range(cidr):
     try:
@@ -95,31 +107,31 @@ def execute_order_66(command):
     return os.popen(command).read()
 
 def exec_dmitry(target):
-    print(f"[·] Dmitry for {target} started.")
+    logger.info(f"[·] Dmitry for {target} started.")
     result_dmirty = execute_order_66(CommandEnumDef.DMIRTY.format(target,target))
     logger.info(result_dmirty)
-    print(f"[·] Dmitry for {target} ended.")
+    logger.info(f"[·] Dmitry for {target} ended.")
 
 def exec_harvester(target, name_file_target):
-    print(f"[·] theHarvester for {target} started.")
+    logger.info(f"[·] theHarvester for {target} started.")
     result_harvester = execute_order_66(CommandEnumDef.HARVESTER.format(target, name_file_target))
     logger.info(result_harvester)
     with open(f'{SAVES}{name_file_target}_harvester.json', 'r') as file:
         output = json.load(file)
     save_info("harvester", output, name_file_target)
-    print(f"[·] theHarvester for {target} ended.")
+    logger.info(f"[·] theHarvester for {target} ended.")
 
 def exec_subfinder(target,flags, name_file_target):
-    print(f"[·] subfinder for {target} started.")
+    logger.info(f"[·] subfinder for {target} started.")
     if flags.cautious:
         result_subfinder = execute_order_66(CommandEnumCau.SUBFINDER.format(target, name_file_target))
     else:
         result_subfinder = execute_order_66(CommandEnumDef.SUBFINDER.format(target, name_file_target))
     logger.info(result_subfinder)
-    print(f"[·] subfinder for {target} ended.")
+    logger.info(f"[·] subfinder for {target} ended.")
 
 def exec_dnsx(target,flags):
-    print(f"[·] DNSX for {target} started.")
+    logger.info(f"[·] DNSX for {target} started.")
     if flags.aggresive:
         result_dnsx = execute_order_66(CommandEnumAgg.DNSX.format(f"{SAVES}{target}_total_subdomains{target}.txt", target))
         execute_order_66(CommandEnumAgg.DNSX2.format(f"{SAVES}{target}_total_subdomains{target}.txt", target))
@@ -130,10 +142,10 @@ def exec_dnsx(target,flags):
         result_dnsx = execute_order_66(CommandEnumDef.DNSX.format(f"{SAVES}{target}_total_subdomains{target}.txt", target))
         execute_order_66(CommandEnumDef.DNSX2.format(f"{SAVES}{target}_total_subdomains{target}.txt", target))
     logger.info(result_dnsx)
-    print(f"[·] DNSX for {target} ended.")
+    logger.info(f"[·] DNSX for {target} ended.")
 
 def exec_nmap(target, flags):
-    print(f"[·] NMAP for {target} started.")
+    logger.info(f"[·] NMAP for {target} started.")
     if flags.domain or flags.list_Domain:
         if flags.aggressive:
             execute_order_66(CommandEnumAgg.NMAPLIST.format(f"{SAVES}{target}_total_ips.txt",target))
@@ -151,7 +163,7 @@ def exec_nmap(target, flags):
     with open(f"results/temp/{target}_nmap.txt", 'r') as file:
         content = file.read()
     logger.info(content)
-    print(f"[·] NMAP for {target} ended.")
+    logger.info(f"[·] NMAP for {target} ended.")
 
 def exec_ferox(target,name_file_target):
     logger.info(f"[·] Feroxbuster for {target} started.")
@@ -198,7 +210,7 @@ def work_domini(targets, flags):
     for target in targets:
         if validate_domain(target):
 
-            print(f"[+] OSINT and Recon for {target} started.")
+            logger.info(f"[+] OSINT and Recon for {target} started.")
             exec_dmitry(target)
             exec_harvester(target, target)
             exec_subfinder(target,flags, target)
@@ -275,17 +287,17 @@ def work_ips(targets, flags):
             ip_range = expand_ip_range(target)
             for ip in ip_range:
                 if validate_ip(ip):
-                    print(f"[+] OSINT and Recon for {ip} started.")
+                    logger.info(f"[+] OSINT and Recon for {ip} started.")
                     scan_recon_ip(ip, flags)
-                    print(f"[+] OSINT and Recon for {ip} completed.")
+                    logger.info(f"[+] OSINT and Recon for {ip} completed.")
 
                 else:
                     logger.error(f"[-] IP {ip} not valid or not reachable")
         else:
             if validate_ip(target):
-                print(f"[+] OSINT and Recon for {target} started.")
+                logger.info(f"[+] OSINT and Recon for {target} started.")
                 scan_recon_ip(target, flags)
-                print(f"[+] OSINT and Recon for {target} completed.")
+                logger.info(f"[+] OSINT and Recon for {target} completed.")
 
             else:
                 logger.error(f"[-] IP {target} not valid or not reachable")
@@ -298,7 +310,7 @@ def recon(flags):
         try:
             with open(flags.list_Domain, 'r') as file:
                 targets = [line.strip() for line in file.readlines() if line.strip()]
-                work_domini(targets, flags)
+            work_domini(targets, flags)
         except FileNotFoundError:
             logger.error(f"[-] File not found: {flags.list_Ip or flags.list_Domain}")
             return
@@ -309,7 +321,7 @@ def recon(flags):
         try:
             with open(flags.list_Ip, 'r') as file:
                 targets = [line.strip() for line in file.readlines() if line.strip()]
-                work_ips(targets, flags)
+            work_ips(targets, flags)
         except FileNotFoundError:
             logger.error(f"[-] File not found: {flags.list_Ip or flags.list_Domain}")
             return
@@ -352,7 +364,7 @@ def vuln_domini(targets, flags):
     for target in targets:
         if validate_domain(target):
 
-            print(f"[+] Vulnerability sacn for {target} started.")
+            logger.info(f"[+] Vulnerability sacn for {target} started.")
 
             exec_nuclei(target, flags)
             exec_wpscan_vuln(target,flags,target)
@@ -363,7 +375,7 @@ def vuln_domini(targets, flags):
             logger.error(f"[-] Domain {target} not valid or not reachable")
 
 def vuln_scan_ip(target,flags):
-        print(f"[+] Vulnerability sacn for {target} started.")
+        logger.info(f"[+] Vulnerability sacn for {target} started.")
 
         exec_nuclei(target, flags)
         domain_target = execute_order_66(f"echo {target} | dnsx -silent -resp-only -ptr ").strip()
@@ -386,17 +398,17 @@ def vuln_ip(targets, flags):
             ip_range = expand_ip_range(target)
             for ip in ip_range:
                 if validate_ip(ip):
-                    print(f"[+] OSINT and Recon for {ip} started.")
+                    logger.info(f"[+] OSINT and Recon for {ip} started.")
                     vuln_scan_ip(ip, flags)
-                    print(f"[+] OSINT and Recon for {ip} completed.")
+                    logger.info(f"[+] OSINT and Recon for {ip} completed.")
 
                 else:
                     logger.error(f"[-] IP {ip} not valid or not reachable")
         else:
             if validate_ip(target):
-                print(f"[+] OSINT and Recon for {target} started.")
+                logger.info(f"[+] OSINT and Recon for {target} started.")
                 vuln_scan_ip(target, flags)
-                print(f"[+] OSINT and Recon for {target} completed.")
+                logger.info(f"[+] OSINT and Recon for {target} completed.")
 
             else:
                 logger.error(f"[-] IP {target} not valid or not reachable")
@@ -409,7 +421,7 @@ def vuln(flags):
         try:
             with open(flags.list_Domain, 'r') as file:
                 targets = [line.strip() for line in file.readlines() if line.strip()]
-                vuln_domini(targets, flags)
+            vuln_domini(targets, flags)
         except FileNotFoundError:
             logger.error(f"[-] File not found: {flags.list_Ip or flags.list_Domain}")
             return
@@ -420,7 +432,7 @@ def vuln(flags):
         try:
             with open(flags.list_Ip, 'r') as file:
                 targets = [line.strip() for line in file.readlines() if line.strip()]
-                vuln_ip(targets, flags)
+            vuln_ip(targets, flags)
         except FileNotFoundError:
             logger.error(f"[-] File not found: {flags.list_Ip or flags.list_Domain}")
             return
@@ -433,9 +445,7 @@ def clean_txt(file_path):
         lines = f.readlines()
     return [line.strip() for line in lines]
 
-
 def remove_illegal_characters(value):
-    # Define un patrón de caracteres ilegales
     illegal_characters_re = re.compile(r'[\x00-\x08\x0B\x0C\x0E-\x1F]')
 
     if isinstance(value, str):
@@ -449,7 +459,6 @@ def process_files_sheet_txt(results_workbook, file_path):
 
 
     ws_single_model = results_workbook.create_sheet(title=tool_name)
-    #ws_single_model.append([f"{tool_name} Output"])
 
     set_columns_width(ws_single_model)
 
@@ -459,15 +468,7 @@ def process_files_sheet_txt(results_workbook, file_path):
         try:
             ws_single_model.append(cleaned_row)
         except openpyxl.utils.exceptions.IllegalCharacterError as e:
-            print(f"Error: {e} en la línea: {cleaned_row}")
-
-    #for row in data:
-        #cleaned_row = [remove_illegal_characters(cell) for cell in row]
-        #ws_single_model.append(cleaned_row)
-        #try:
-           # ws_single_model.append([row])
-        #except openpyxl.utils.exceptions.IllegalCharacterError:
-            #logger.info(f"openpyxl.utils.exceptions.IllegalCharacterError {row}")
+            logger.info(f"Error: {e} en la línea: {cleaned_row}")
 
 def clean_json(file_path):
     with open(file_path, 'r') as f:
@@ -476,7 +477,6 @@ def clean_json(file_path):
             return None
         data = json.loads(content)
     return data
-
 
 def process_files_sheet_json(results_workbook, file_path):
     base_name = os.path.basename(file_path)
@@ -512,14 +512,37 @@ def process_files_sheet_json(results_workbook, file_path):
                 row.append(value)
 
             ws_single_model.append(row)
+def process_files_sheet_interesting(results_workbook, file_path):
+    ws = results_workbook["Interesting Findings"]
+    base_name = os.path.basename(file_path)
+    parts = base_name.split('_')
+    column_name = parts[2].split('.')[0]
 
-def make_excel(targets, flags, is_ip):
+    if column_name == "ips" and "total" not in base_name:
+        return
+
+    data = clean_txt(file_path)
+    if not data:
+        return
+
+    col_idx = 1
+    while ws.cell(row=1, column=col_idx).value is not None:
+        col_idx += 1
+
+    ws.cell(row=1, column=col_idx).value = column_name
+    for row_idx, line in enumerate(data, start=2):
+        ws.cell(row=row_idx, column=col_idx).value = line
+def make_excel(targets, is_ip):
     for target in targets:
         results_workbook = openpyxl.Workbook()
+        ws = results_workbook.active
+        ws.title = "Interesting Findings"
+
         if is_ip:
             if '/' in target:
                 ip_range = expand_ip_range(target)
                 for ip in ip_range:
+                    logger.info(f"[+] Generating Excel for {ip}.")
                     for root, dirs, files in os.walk(SAVES):
                         for file in files:
                             #txt
@@ -532,8 +555,36 @@ def make_excel(targets, flags, is_ip):
                                 file_path = os.path.join(root, file)
                                 process_files_sheet_json(results_workbook, file_path)
 
-        else:
+                            elif file.startswith(ip) and file.endswith(".txt") and ("harvester" in file or "total" in file):
+                                file_path = os.path.join(file)
+                                process_files_sheet_interesting(results_workbook, file_path)
+                    output_file = f"results/kudo_{ip}_{datetime.datetime.now()}.xlsx"
+                    results_workbook.save(output_file)
+                    logger.info(f"[+] Excel for {ip} finished.")
+            else:
+                logger.info(f"[+] Generating Excel for {target}.")
+                for root, dirs, files in os.walk(SAVES):
+                    for file in files:
+                        #txt
+                        if file.startswith(target) and file.endswith(
+                                ".txt") and "harvester" not in file and "dnsx2" not in file and "total" not in file:
+                            file_path = os.path.join(file)
+                            process_files_sheet_txt(results_workbook, file_path)
+                        #json
+                        elif file.startswith(target) and file.endswith(".json"):
+                            file_path = os.path.join(root, file)
+                            process_files_sheet_json(results_workbook, file_path)
 
+                        elif file.startswith(target) and file.endswith(".txt") and ("harvester" in file or "total" in file):
+                            file_path = os.path.join(file)
+                            process_files_sheet_interesting(results_workbook, file_path)
+                output_file = f"results/kudo_{target}_{datetime.datetime.now()}.xlsx"
+                results_workbook.save(output_file)
+                logger.info(f"[+] Excel for {target} finished.")
+
+
+        else:
+            logger.info(f"[+] Generating Excel for {target}.")
             for root, dirs, files in os.walk(SAVES):
                 for file in files:
                     if file.startswith(target) and file.endswith(".txt") and "harvester" not in file and "dnsx2" not in file and "total" not in file :
@@ -542,27 +593,30 @@ def make_excel(targets, flags, is_ip):
                     elif file.startswith(target) and file.endswith(".json"):
                         file_path = os.path.join(root, file)
                         process_files_sheet_json(results_workbook, file_path)
+                    elif file.startswith(target) and file.endswith(".txt") and ("harvester" in file or "total" in file):
+                        file_path = os.path.join(file)
+                        process_files_sheet_interesting(results_workbook, file_path)
 
             output_file = f"results/kudo_{target}_{datetime.datetime.now()}.xlsx"
             results_workbook.save(output_file)
+            logger.info(f"[+] Excel for {target} finished.")
 
 def choose_excel(flags):
     if flags.domain:
         targets = [flags.domain]
-        make_excel(targets, flags, False)
+        make_excel(targets, False)
     elif flags.list_Domain:
         with open(flags.list_Domain, 'r') as file:
             targets = [line.strip() for line in file.readlines() if line.strip()]
-            make_excel(targets, flags, False)
+            make_excel(targets, False)
 
     elif flags.ip:
         targets = [flags.ip]
-        make_excel(targets, flags, True)
+        make_excel(targets,  True)
     elif flags.list_Ip:
         with open(flags.list_Ip, 'r') as file:
             targets = [line.strip() for line in file.readlines() if line.strip()]
-            make_excel(targets, flags, True)
-
+            make_excel(targets,  True)
 
 def set_columns_width(ws):
     for col in ws.columns:
@@ -574,25 +628,22 @@ def set_columns_width(ws):
         ws.column_dimensions[col[0].column_letter].width = adjusted_width
 
 def main(flags):
-    #os.popen("rm -rf results/temp/*")
-    prova = True
-    if prova:
-        if not flags.vuln_scan and not flags.recon: # no flags, default
-            recon(flags)
-            vuln(flags)
-        elif not flags.recon: # -vuln_scan, only
-            vuln(flags)
-        elif not flags.vuln_scan: # -recon, only
-            recon(flags)
-        else: # -recon i -vuln_scan, default
-            recon(flags)
-            vuln(flags)
+    os.popen("rm -rf results/temp/*")
+    welcome()
+    if not flags.vuln_scan and not flags.recon: # no flags, default
+        recon(flags)
+        vuln(flags)
+    elif not flags.recon: # -vuln_scan, only
+        vuln(flags)
+    elif not flags.vuln_scan: # -recon, only
+        recon(flags)
+    else: # -recon i -vuln_scan, default
+        recon(flags)
+        vuln(flags)
 
     choose_excel(flags)
 
-
-    #os.popen("rm -rf results/temp/*")
-
+    os.popen("rm -rf results/temp/*")
 
 
 if __name__ == "__main__":
@@ -607,5 +658,4 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--cautious", action="store_true", help="Run scans in cautious mode")
 
     args = parser.parse_args()
-    print(args)
     main(args)
