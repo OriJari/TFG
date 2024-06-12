@@ -2,7 +2,6 @@
 
 programs=(
 	golang-go
-	feroxbuster
 	subfinder
 	dnsx
 	gobuster
