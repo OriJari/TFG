@@ -132,10 +132,10 @@ def exec_subfinder(target,flags, name_file_target):
 
 def exec_dnsx(target,flags):
     logger.info(f"[·] DNSX for {target} started.")
-    if flags.aggresive:
+    if flags.aggresive and not flags.cautious:
         result_dnsx = execute_order_66(CommandEnumAgg.DNSX.format(f"{SAVES}{target}_total_subdomains{target}.txt", target))
         execute_order_66(CommandEnumAgg.DNSX2.format(f"{SAVES}{target}_total_subdomains{target}.txt", target))
-    elif flags.cautious:
+    elif flags.cautious and not flags.aggressive:
         result_dnsx = execute_order_66(CommandEnumCau.DNSX.format(f"{SAVES}{target}_total_subdomains{target}.txt", target))
         execute_order_66(CommandEnumCau.DNSX2.format(f"{SAVES}{target}_total_subdomains{target}.txt", target))
     else:
@@ -147,16 +147,16 @@ def exec_dnsx(target,flags):
 def exec_nmap(target, flags):
     logger.info(f"[·] NMAP for {target} started.")
     if flags.domain or flags.list_Domain:
-        if flags.aggressive:
+        if flags.aggressive and not flags.cautious:
             execute_order_66(CommandEnumAgg.NMAPLIST.format(f"{SAVES}{target}_total_ips.txt",target))
-        elif flags.cautious:
+        elif flags.cautious and not flags.aggressive:
             execute_order_66(CommandEnumCau.NMAPLIST.format(f"{SAVES}{target}_total_ips.txt",target))
         else:
             execute_order_66(CommandEnumDef.NMAPLIST.format(f"{SAVES}{target}_total_ips.txt",target))
     elif flags.ip or flags.list_Ip:
-        if flags.aggressive:
+        if flags.aggressive and not flags.cautious:
             execute_order_66(CommandEnumAgg.NMAP.format(target,target))
-        elif flags.cautious:
+        elif flags.cautious and not flags.aggressive:
             execute_order_66(CommandEnumCau.NMAP.format(target,target))
         else:
             execute_order_66(CommandEnumDef.NMAP.format(target,target))
@@ -189,11 +189,11 @@ def check_scan_aborted(file_path):
     return "scan_aborted" in data
 def exec_wpscan(target, flags, name_file_target):
     logger.info(f"[·] WPscan Vuln for {target} started.")
-    if flags.aggressive:
+    if flags.aggressive and not flags.cautious:
         content =execute_order_66(CommandEnumAgg.WPSACN.format(target,name_file_target))
         if check_scan_aborted(f"{SAVES}{target}_wpscan.txt"):
             content = execute_order_66(CommandEnumAgg.WPSACN.format(f"www.{target}", name_file_target))
-    elif flags.cautious:
+    elif flags.cautious and not flags.aggressive:
         content =execute_order_66(CommandEnumCau.WPSACN.format(target,name_file_target))
         if check_scan_aborted(f"{SAVES}{target}_wpscan.txt"):
             content = execute_order_66(CommandEnumCau.WPSACN.format(f"www.{target}", name_file_target))
@@ -343,11 +343,11 @@ def exec_nuclei(target,flags):
 
 def exec_wpscan_vuln(target, flags, name_file_target):
     logger.info(f"[·] WPscan Vuln for {target} started.")
-    if flags.aggressive:
+    if flags.aggressive and not flags.cautious:
         content = execute_order_66(CommandEnumAgg.WPSCANVULN.format(target,name_file_target))
         if check_scan_aborted(f"{SAVES}{target}_wpscanvuln.txt"):
             content = execute_order_66(CommandEnumAgg.WPSCANVULN.format(f"www.{target}", name_file_target))
-    elif flags.cautious:
+    elif flags.cautious and not flags.aggressive:
         content = execute_order_66(CommandEnumCau.WPSCANVULN.format(target,name_file_target))
         if check_scan_aborted(f"{SAVES}{target}_wpscanvuln.txt"):
             content = execute_order_66(CommandEnumCau.WPSCANVULN.format(f"www.{target}", name_file_target))
