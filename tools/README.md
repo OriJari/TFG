@@ -19,7 +19,6 @@ Below is the list of tools and their corresponding usage documentation files:
 
 - `dmitry_usage.txt` - Usage instructions for Dmitry.
 - `dnsx_usage.txt` - Usage instructions for DNSx.
-- `feroxbuster_usage.txt` - Usage instructions for Feroxbuster.
 - `gobuster_usage.txt` - General usage instructions for Gobuster.
 - `gobuster_dns_usage.txt` - DNS brute-forcing with Gobuster.
 - `nmap_usage.txt` - Usage instructions for Nmap.
