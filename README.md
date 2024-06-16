@@ -65,7 +65,7 @@ https://github.com/laramies/theHarvester
 ### wpscan
 For the wpscan, at file config.py as a constant there is the line 
 
-```PI_WPSCAN = "YOUR_API_TOKEN" #add your api token, it's free, only with register at https://wpscan.com/```
+```API_WPSCAN = "YOUR_API_TOKEN" #add your api token, it's free, only with register at https://wpscan.com/```
 
 Register to the web of wpscan https://wpscan.com/, and with a free account you get acces to the API.
 
