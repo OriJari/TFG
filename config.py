@@ -41,7 +41,7 @@ class CommandEnumAgg(StrEnum):  #aggresive comands
     NMAPLIST = f"nmap -T5 -iL {{}} -oN {SAVES}{{}}_nmap.txt"
     NMAP = f"nmap -T5 {{}} -oN {SAVES}{{}}_nmap.txt"
     WPSACN = f"wpscan --url https://{{}} -t 100 --random-user-agent --enumerate p,t,u,m --detection-mode aggressive --plugins-detection aggressive --themes-detection aggressive --user-detection aggresive -o {SAVES}{{}}_wpscan.txt -f cli"
-    DNSX = f"dnsx -l {{}} -a -re-retry 3 -o {SAVES}{{}}_dnsx_subdomains.txt"
+    DNSX = f"dnsx -l {{}} -a -re -retry 3 -o {SAVES}{{}}_dnsx_subdomains.txt"
     DNSX2 = f"dnsx -l {{}} -a -ro -retry 3 -o {SAVES}{{}}_dnsx2_subdomains.txt"
 
     #vulns
