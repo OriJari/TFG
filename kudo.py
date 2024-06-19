@@ -34,7 +34,7 @@ def welcome():
 *******************************************************************
 usage: kudo.py [-h] [-i IP] [-d DOMAIN] [-lI LIST_IP] [-lD LIST_DOMAIN] [-r] [-v] [-a] [-c]
 
-Kudo is for recognition and scanning, services, technologies and vulnerabilities, automated.
+Kudo is a script that automates the recognition and scanning of services, technologies and vulnerabilities.
 
 *******************************************************************
     """
