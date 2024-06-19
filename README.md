@@ -1,9 +1,12 @@
 # TFG - KUDO
 KUDO has been developed as a final grade's project. 
 
-Kudo is for recognition and scanning, services, technologies and vulnerabilities, automated.
+Kudo is a script that automates the recognition and scanning of services, technologies and vulnerabilities.
 
 Is a Script that collects different information gathering tools in the phase of recognizing and scanning a pentest. Generate an xlsx file with all the information found.
+
+(only tested for kali linux)
+
 ## How to isntall
 You must have installed Python 3 (recomended 3.12)
 then execute the following comands:
