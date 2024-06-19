@@ -17,6 +17,10 @@ then execute the following comands:
 
 ```sudo ./installation_tools.sh ```
 
+If you have already the tools instaled, execute the following comand to create the directories for the results.
+
+```mkdir -p results/temp/```
+
 It is recomendable to create a venv, at the directory of the project:
 
 ```python -m virtualenv venv```
