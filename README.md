@@ -18,7 +18,9 @@ It is recomendable to create a venv, at the directory of the project:
 
 ```python -m virtualenv venv```
 
-``./venv/bin/activate``
+``venv/bin/activate``
+or
+``source venv/bin/activate``
 
 ```pip install -r requirements.txt```
 ### Recomendation
