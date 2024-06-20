@@ -181,7 +181,7 @@ def exec_waf(target, name_file_target):
     logger.info(f"[·] Waffw00f for {target} started.")
     result_waf = execute_order_66(CommandEnumDef.WAF.format(target,name_file_target))
     logger.info(result_waf)
-    logger.info(f"[·] Waffw00f for {target} started.")
+    logger.info(f"[·] Waffw00f for {target} ended.")
 
 def check_scan_aborted(file_path):
     with open(file_path, 'r') as file:
